@@ -1,36 +1,99 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Beyblade Tracker
+
+A modern web application for tracking your Beyblade collection and tournament performance. Built with Next.js, TypeScript, and Tailwind CSS.
+
+## Features
+
+### 🧭 Navigation
+- Clean, responsive navigation bar across all pages
+- Active page highlighting
+- Quick access to Home, Collection, and Tournaments
+- Mobile-friendly design
+
+### 🔧 Collection Management
+- Track your Beyblade parts inventory
+- Manage blades, assist blades, ratchets, and bits
+- Add products to automatically populate parts
+- View collection statistics and insights
+
+### 🏆 Tournament Tracking
+- Record tournament results with name, location, and date
+- Build and track decks (3 combo sets)
+- Monitor points earned per combo
+- Performance leaderboards and analytics
+- Win/loss statistics
+
+## Technology Stack
+
+- **Framework**: Next.js 15 with App Router
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Development**: Turbopack for fast builds
 
 ## Getting Started
 
-First, run the development server:
-
+1. Install dependencies:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Run the development server:
+```bash
+npm run dev
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Project Structure
 
-## Learn More
+```
+src/
+├── app/
+│   ├── collection/       # Collection management pages
+│   ├── tournaments/      # Tournament tracking pages
+│   ├── page.tsx          # Homepage
+│   └── layout.tsx        # Root layout
+├── components/
+│   └── Navigation.tsx    # Shared navigation component
+├── lib/
+│   └── supabase.ts       # Supabase client configuration
+├── services/
+│   └── database.ts       # Database operations
+└── types/
+    └── beyblade.ts       # TypeScript type definitions
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Development
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The project uses:
+- **Next.js 15** with App Router for modern React development
+- **TypeScript** for type safety
+- **Tailwind CSS** for styling
+- **ESLint** for code quality
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Future Enhancements
 
-## Deploy on Vercel
+- Database integration for data persistence
+- User authentication and profiles
+- Mobile app versions
+- Advanced analytics and reporting
+- Community features and sharing
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Beyblade X Parts Reference
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Part Types
+- **Blade**: The main attack component
+- **Assist Blade**: Secondary blade component  
+- **Ratchet**: Height and stability component
+- **Bit**: The tip that touches the stadium
+
+### Combo Structure
+A complete Beyblade combo consists of: Blade + Assist Blade + Ratchet + Bit
+
+## Contributing
+
+This project is in active development. Feel free to suggest features or report issues.
+
+## License
+
+MIT License - feel free to use this project as a starting point for your own Beyblade tracking app!
