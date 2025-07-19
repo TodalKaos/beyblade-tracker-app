@@ -445,7 +445,7 @@ export default function Combos() {
                                         </p>
                                         {parts.length === 0 && (
                                             <p className="text-sm text-yellow-600 dark:text-yellow-400">
-                                                💡 You'll need some parts first. <a href="/collection" className="underline">Add parts to your collection</a>
+                                                💡 You&apos;ll need some parts first. <a href="/collection" className="underline">Add parts to your collection</a>
                                             </p>
                                         )}
                                     </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { getAllParts, getCollectionStats, addPart, updatePart, deletePart, searchParts } from '@/services/database'
 import type { BeybladePartDB, BeybladePartCreate, PartType } from '@/types/beyblade'
 import Navigation from '@/components/Navigation'
@@ -33,6 +33,15 @@ export default function Collection() {
         notes: ''
     })
 
+    const handleSearch = useCallback(async () => {
+        try {
+            const searchResults = await searchParts(searchTerm, filterType)
+            setParts(searchResults)
+        } catch (error) {
+            console.error('Error searching parts:', error)
+        }
+    }, [searchTerm, filterType])
+
     useEffect(() => {
         loadData()
     }, [])
@@ -40,7 +49,7 @@ export default function Collection() {
     useEffect(() => {
         // Search/filter when search term or filter changes
         handleSearch()
-    }, [searchTerm, filterType])
+    }, [handleSearch])
 
     const loadData = async () => {
         try {
@@ -55,15 +64,6 @@ export default function Collection() {
             console.error('Error loading data:', error)
         } finally {
             setLoading(false)
-        }
-    }
-
-    const handleSearch = async () => {
-        try {
-            const searchResults = await searchParts(searchTerm, filterType)
-            setParts(searchResults)
-        } catch (error) {
-            console.error('Error searching parts:', error)
         }
     }
 

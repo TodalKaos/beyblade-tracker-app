@@ -31,7 +31,7 @@ export default function Signup() {
         }
 
         try {
-            const { data, error } = await supabase.auth.signUp({
+            const { error } = await supabase.auth.signUp({
                 email,
                 password,
             })
@@ -40,8 +40,8 @@ export default function Signup() {
 
             setSuccess(true)
             setMessage('Check your email for a confirmation link!')
-        } catch (error: any) {
-            setMessage(error.message || 'An error occurred during signup')
+        } catch (error: unknown) {
+            setMessage((error as Error).message || 'An error occurred during signup')
         } finally {
             setLoading(false)
         }

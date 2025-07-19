@@ -140,7 +140,7 @@ export default function Tournaments() {
         }
     }
 
-    const formatComboName = (combo: any) => {
+    const formatComboName = (combo: ComboWithParts | null | undefined) => {
         if (!combo) return 'No combo selected'
         const parts = []
         if (combo.blade?.name) parts.push(combo.blade.name)

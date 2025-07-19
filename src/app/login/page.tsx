@@ -16,7 +16,7 @@ export default function Login() {
         setMessage('')
 
         try {
-            const { data, error } = await supabase.auth.signInWithPassword({
+            const { error } = await supabase.auth.signInWithPassword({
                 email,
                 password,
             })
@@ -25,8 +25,8 @@ export default function Login() {
 
             // Redirect to home page on successful login
             window.location.href = '/'
-        } catch (error: any) {
-            setMessage(error.message || 'An error occurred during login')
+        } catch (error: unknown) {
+            setMessage((error as Error).message || 'An error occurred during login')
         } finally {
             setLoading(false)
         }
@@ -90,7 +90,7 @@ export default function Login() {
 
                 <div className="mt-6 text-center">
                     <p className="text-sm text-gray-600 dark:text-gray-300">
-                        Don't have an account?{' '}
+                        Don&apos;t have an account?{' '}
                         <Link href="/signup" className="text-blue-600 hover:text-blue-500 font-medium">
                             Sign up here
                         </Link>
