@@ -377,19 +377,12 @@ async function updateComboStats(): Promise<void> {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
-    console.log('Updating combo stats...')
-
     const { data: combos, error: combosError } = await supabase
         .from('beyblade_combos')
         .select('id')
         .eq('user_id', user.id)
 
-    if (combosError || !combos) {
-        console.error('Error fetching combos for stats update:', combosError)
-        return
-    }
-
-    console.log(`Found ${combos.length} combos to update`)
+    if (combosError || !combos) return
 
     for (const combo of combos) {
         const { data: tournaments, error: tournamentsError } = await supabase
@@ -397,10 +390,7 @@ async function updateComboStats(): Promise<void> {
             .select('combo1_id, combo2_id, combo3_id, combo1_points, combo2_points, combo3_points')
             .eq('user_id', user.id)
 
-        if (tournamentsError || !tournaments) {
-            console.error('Error fetching tournaments for stats update:', tournamentsError)
-            continue
-        }
+        if (tournamentsError || !tournaments) continue
 
         let total_points = 0
         let tournaments_used = 0
@@ -420,9 +410,7 @@ async function updateComboStats(): Promise<void> {
             }
         })
 
-        console.log(`Combo ${combo.id}: ${total_points} points, ${tournaments_used} tournaments`)
-
-        const { error: updateError } = await supabase
+        await supabase
             .from('beyblade_combos')
             .update({
                 total_points,
@@ -430,19 +418,7 @@ async function updateComboStats(): Promise<void> {
             })
             .eq('id', combo.id)
             .eq('user_id', user.id)
-
-        if (updateError) {
-            console.error(`Error updating combo ${combo.id}:`, updateError)
-        }
     }
-
-    console.log('Combo stats update complete')
-}
-
-// Force update combo stats (for debugging)
-export async function forceComboStatsUpdate(): Promise<void> {
-    console.log('Force updating combo stats...')
-    await updateComboStats()
 }
 
 // Get tournament statistics (user-specific)

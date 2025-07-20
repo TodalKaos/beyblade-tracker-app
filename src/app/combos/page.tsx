@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Navigation from '@/components/Navigation'
 import ProtectedRoute from '@/components/ProtectedRoute'
-import { getAllParts, getAllCombos, addCombo, updateCombo, deleteCombo, forceComboStatsUpdate } from '@/services/database'
+import { getAllParts, getAllCombos, addCombo, updateCombo, deleteCombo } from '@/services/database'
 import type { BeybladePartDB, ComboWithParts, BeybladeComboCreate, PartType } from '@/types/beyblade'
 
 export default function Combos() {
@@ -198,16 +198,6 @@ export default function Combos() {
                                     title="Refresh combo data"
                                 >
                                     🔄 Refresh
-                                </button>
-                                <button
-                                    onClick={async () => {
-                                        await forceComboStatsUpdate()
-                                        await loadData()
-                                    }}
-                                    className="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
-                                    title="Force update combo stats"
-                                >
-                                    ⚡ Update Stats
                                 </button>
                             </div>
 
