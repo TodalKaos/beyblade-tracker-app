@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Navigation from '@/components/Navigation'
 import ProtectedRoute from '@/components/ProtectedRoute'
-import { getAllParts, getAllCombos, addCombo, updateCombo, deleteCombo } from '@/services/database'
+import { getAllParts, getAllCombos, addCombo, updateCombo, deleteCombo, forceComboStatsUpdate } from '@/services/database'
 import type { BeybladePartDB, ComboWithParts, BeybladeComboCreate, PartType } from '@/types/beyblade'
 
 export default function Combos() {
@@ -25,6 +25,27 @@ export default function Combos() {
 
     useEffect(() => {
         loadData()
+    }, [])
+
+    // Refresh data when page becomes visible (e.g., navigating back from tournaments)
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (!document.hidden) {
+                loadData()
+            }
+        }
+
+        const handleFocus = () => {
+            loadData()
+        }
+
+        document.addEventListener('visibilitychange', handleVisibilityChange)
+        window.addEventListener('focus', handleFocus)
+
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange)
+            window.removeEventListener('focus', handleFocus)
+        }
     }, [])
 
     const loadData = async () => {
@@ -161,7 +182,7 @@ export default function Combos() {
                             </div>
 
                             {/* Add Combo Button */}
-                            <div className="mb-8 text-center">
+                            <div className="mb-8 text-center flex gap-4 justify-center">
                                 <button
                                     onClick={() => {
                                         setShowAddForm(true)
@@ -170,6 +191,23 @@ export default function Combos() {
                                     className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
                                 >
                                     Create New Combo
+                                </button>
+                                <button
+                                    onClick={loadData}
+                                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                                    title="Refresh combo data"
+                                >
+                                    🔄 Refresh
+                                </button>
+                                <button
+                                    onClick={async () => {
+                                        await forceComboStatsUpdate()
+                                        await loadData()
+                                    }}
+                                    className="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                                    title="Force update combo stats"
+                                >
+                                    ⚡ Update Stats
                                 </button>
                             </div>
 
