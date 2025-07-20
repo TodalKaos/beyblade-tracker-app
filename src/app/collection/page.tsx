@@ -23,6 +23,10 @@ export default function Collection() {
     const [searchTerm, setSearchTerm] = useState('')
     const [filterType, setFilterType] = useState<PartType | 'all'>('all')
 
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1)
+    const [itemsPerPage, setItemsPerPage] = useState(10)
+
     // Form state
     const [newPart, setNewPart] = useState<BeybladePartCreate>({
         name: '',
@@ -37,10 +41,34 @@ export default function Collection() {
         try {
             const searchResults = await searchParts(searchTerm, filterType)
             setParts(searchResults)
+            setCurrentPage(1) // Reset to first page when searching
         } catch (error) {
             console.error('Error searching parts:', error)
         }
     }, [searchTerm, filterType])
+
+    // Pagination calculations
+    const totalItems = parts.length
+    const totalPages = Math.ceil(totalItems / itemsPerPage)
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    const currentParts = parts.slice(startIndex, endIndex)
+
+    const goToPage = (page: number) => {
+        setCurrentPage(Math.max(1, Math.min(page, totalPages)))
+    }
+
+    const goToPrevPage = () => {
+        if (currentPage > 1) {
+            setCurrentPage(currentPage - 1)
+        }
+    }
+
+    const goToNextPage = () => {
+        if (currentPage < totalPages) {
+            setCurrentPage(currentPage + 1)
+        }
+    }
 
     useEffect(() => {
         loadData()
@@ -76,6 +104,7 @@ export default function Collection() {
             loadData() // Refresh data and stats
             setSearchTerm('') // Clear search to show new part
             setFilterType('all')
+            setCurrentPage(1) // Reset to first page
         } catch (error) {
             console.error('Error adding part:', error)
         }
@@ -97,6 +126,10 @@ export default function Collection() {
             setEditingPart(null)
             loadData() // Refresh data and stats
             handleSearch() // Maintain current search/filter
+            // Keep current page unless it's now out of bounds
+            if (currentPage > Math.ceil(parts.length / itemsPerPage)) {
+                setCurrentPage(1)
+            }
         } catch (error) {
             console.error('Error updating part:', error)
         }
@@ -109,6 +142,10 @@ export default function Collection() {
             await deletePart(id)
             loadData() // Refresh data and stats
             handleSearch() // Maintain current search/filter
+            // Keep current page unless it's now out of bounds
+            if (currentPage > Math.ceil(parts.length / itemsPerPage)) {
+                setCurrentPage(Math.max(1, currentPage - 1))
+            }
         } catch (error) {
             console.error('Error deleting part:', error)
         }
@@ -449,46 +486,177 @@ export default function Collection() {
                                         )}
                                     </div>
                                 ) : (
-                                    <div className="grid gap-4">
-                                        {parts.map((part) => (
-                                            <div key={part.id} className="flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                                                <div className="flex-1">
-                                                    <h4 className="font-semibold text-gray-900 dark:text-white">{part.name}</h4>
-                                                    <p className="text-sm text-gray-600 dark:text-gray-300">
-                                                        {part.type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                                                        {part.series && ` • ${part.series}`}
-                                                        {part.color && ` • ${part.color}`}
-                                                    </p>
-                                                    {part.notes && (
-                                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                                            📝 {part.notes}
-                                                        </p>
-                                                    )}
+                                    <>
+                                        {/* Pagination Controls - Top */}
+                                        {totalItems > 0 && (
+                                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-4 border-b border-gray-200 dark:border-gray-600">
+                                                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                                                    <div className="text-sm text-gray-600 dark:text-gray-300">
+                                                        Showing {startIndex + 1}-{Math.min(endIndex, totalItems)} of {totalItems} parts
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <label className="text-sm text-gray-600 dark:text-gray-300">
+                                                            Show:
+                                                        </label>
+                                                        <select
+                                                            value={itemsPerPage}
+                                                            onChange={(e) => {
+                                                                setItemsPerPage(parseInt(e.target.value))
+                                                                setCurrentPage(1)
+                                                            }}
+                                                            className="px-2 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                                        >
+                                                            <option value={5}>5</option>
+                                                            <option value={10}>10</option>
+                                                            <option value={20}>20</option>
+                                                            <option value={50}>50</option>
+                                                        </select>
+                                                        <span className="text-sm text-gray-600 dark:text-gray-300">per page</span>
+                                                    </div>
                                                 </div>
-                                                <div className="flex items-center gap-4">
-                                                    <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                                                        x{part.quantity}
-                                                    </div>
-                                                    <div className="flex gap-2">
+
+                                                {totalPages > 1 && (
+                                                    <div className="flex items-center gap-1 sm:gap-2">
                                                         <button
-                                                            onClick={() => startEditing(part)}
-                                                            className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm transition-colors"
-                                                            title="Edit part"
+                                                            onClick={goToPrevPage}
+                                                            disabled={currentPage === 1}
+                                                            className="px-2 sm:px-3 py-1 bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 text-gray-700 dark:bg-gray-600 dark:hover:bg-gray-500 dark:disabled:bg-gray-700 dark:text-white rounded-md text-sm transition-colors"
                                                         >
-                                                            ✏️ Edit
+                                                            ← Prev
                                                         </button>
+
+                                                        <div className="flex items-center gap-1">
+                                                            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                                                let pageNum;
+                                                                if (totalPages <= 5) {
+                                                                    pageNum = i + 1;
+                                                                } else if (currentPage <= 3) {
+                                                                    pageNum = i + 1;
+                                                                } else if (currentPage >= totalPages - 2) {
+                                                                    pageNum = totalPages - 4 + i;
+                                                                } else {
+                                                                    pageNum = currentPage - 2 + i;
+                                                                }
+
+                                                                return (
+                                                                    <button
+                                                                        key={pageNum}
+                                                                        onClick={() => goToPage(pageNum)}
+                                                                        className={`px-2 sm:px-3 py-1 rounded-md text-sm transition-colors ${currentPage === pageNum
+                                                                                ? 'bg-blue-600 text-white dark:bg-blue-500'
+                                                                                : 'bg-gray-200 hover:bg-gray-300 text-gray-700 dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-white'
+                                                                            }`}
+                                                                    >
+                                                                        {pageNum}
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                        </div>
+
                                                         <button
-                                                            onClick={() => handleDeletePart(part.id)}
-                                                            className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm transition-colors"
-                                                            title="Delete part"
+                                                            onClick={goToNextPage}
+                                                            disabled={currentPage === totalPages}
+                                                            className="px-2 sm:px-3 py-1 bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 text-gray-700 dark:bg-gray-600 dark:hover:bg-gray-500 dark:disabled:bg-gray-700 dark:text-white rounded-md text-sm transition-colors"
                                                         >
-                                                            🗑️ Delete
+                                                            Next →
                                                         </button>
                                                     </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        <div className="grid gap-4">
+                                            {currentParts.map((part) => (
+                                                <div key={part.id} className="flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                                                    <div className="flex-1">
+                                                        <h4 className="font-semibold text-gray-900 dark:text-white">{part.name}</h4>
+                                                        <p className="text-sm text-gray-600 dark:text-gray-300">
+                                                            {part.type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                                            {part.series && ` • ${part.series}`}
+                                                            {part.color && ` • ${part.color}`}
+                                                        </p>
+                                                        {part.notes && (
+                                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                                📝 {part.notes}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                                                            x{part.quantity}
+                                                        </div>
+                                                        <div className="flex gap-2">
+                                                            <button
+                                                                onClick={() => startEditing(part)}
+                                                                className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm transition-colors"
+                                                                title="Edit part"
+                                                            >
+                                                                ✏️ Edit
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDeletePart(part.id)}
+                                                                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm transition-colors"
+                                                                title="Delete part"
+                                                            >
+                                                                🗑️ Delete
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        {/* Pagination Controls - Bottom */}
+                                        {totalItems > 0 && totalPages > 1 && (
+                                            <div className="flex justify-center items-center mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
+                                                <div className="flex items-center gap-1 sm:gap-2">
+                                                    <button
+                                                        onClick={goToPrevPage}
+                                                        disabled={currentPage === 1}
+                                                        className="px-3 sm:px-4 py-2 bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 text-gray-700 dark:bg-gray-600 dark:hover:bg-gray-500 dark:disabled:bg-gray-700 dark:text-white rounded-md text-sm transition-colors"
+                                                    >
+                                                        ← Prev
+                                                    </button>
+
+                                                    <div className="flex items-center gap-1">
+                                                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                                            let pageNum;
+                                                            if (totalPages <= 5) {
+                                                                pageNum = i + 1;
+                                                            } else if (currentPage <= 3) {
+                                                                pageNum = i + 1;
+                                                            } else if (currentPage >= totalPages - 2) {
+                                                                pageNum = totalPages - 4 + i;
+                                                            } else {
+                                                                pageNum = currentPage - 2 + i;
+                                                            }
+
+                                                            return (
+                                                                <button
+                                                                    key={pageNum}
+                                                                    onClick={() => goToPage(pageNum)}
+                                                                    className={`px-2 sm:px-3 py-2 rounded-md text-sm transition-colors ${currentPage === pageNum
+                                                                            ? 'bg-blue-600 text-white dark:bg-blue-500'
+                                                                            : 'bg-gray-200 hover:bg-gray-300 text-gray-700 dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-white'
+                                                                        }`}
+                                                                >
+                                                                    {pageNum}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+
+                                                    <button
+                                                        onClick={goToNextPage}
+                                                        disabled={currentPage === totalPages}
+                                                        className="px-3 sm:px-4 py-2 bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 text-gray-700 dark:bg-gray-600 dark:hover:bg-gray-500 dark:disabled:bg-gray-700 dark:text-white rounded-md text-sm transition-colors"
+                                                    >
+                                                        Next →
+                                                    </button>
                                                 </div>
                                             </div>
-                                        ))}
-                                    </div>
+                                        )}
+                                    </>
                                 )}
                             </div>
                         </div>
