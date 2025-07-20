@@ -426,8 +426,7 @@ async function updateComboStats(): Promise<void> {
             .from('beyblade_combos')
             .update({
                 total_points,
-                tournaments_used,
-                performance_rating: tournaments_used > 0 ? Math.round((total_points / tournaments_used) * 10) / 10 : 0
+                tournaments_used
             })
             .eq('id', combo.id)
             .eq('user_id', user.id)
