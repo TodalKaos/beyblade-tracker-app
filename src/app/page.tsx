@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function Home() {
@@ -17,57 +18,60 @@ export default function Home() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-        <div className="container mx-auto px-4 py-16">
-          <header className="text-center mb-16">
-            <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-4">
-              Beyblade Tracker
-            </h1>
-            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto mb-8">
-              Track your collection, manage tournament stats, and analyze your performance with the ultimate Beyblade companion app.
-            </p>
-            <div className="flex gap-4 justify-center">
-              <Link
-                href="/signup"
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
-              >
-                Get Started
-              </Link>
-              <Link
-                href="/login"
-                className="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
-              >
-                Sign In
-              </Link>
-            </div>
-          </header>
+      <div className="min-h-screen flex flex-col">
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex-1">
+          <div className="container mx-auto px-4 py-16">
+            <header className="text-center mb-16">
+              <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-4">
+                Beyblade Tracker
+              </h1>
+              <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto mb-8">
+                Track your collection, manage tournament stats, and analyze your performance with the ultimate Beyblade companion app.
+              </p>
+              <div className="flex gap-4 justify-center">
+                <Link
+                  href="/signup"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                >
+                  Get Started
+                </Link>
+                <Link
+                  href="/login"
+                  className="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                >
+                  Sign In
+                </Link>
+              </div>
+            </header>
 
-          <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            <div className="text-center bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-              <div className="text-blue-600 dark:text-blue-400 text-4xl mb-2">📦</div>
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Collection Management</h4>
-              <p className="text-sm text-gray-600 dark:text-gray-300">Track all your Beyblade parts and inventory</p>
-            </div>
-            <div className="text-center bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-              <div className="text-purple-600 dark:text-purple-400 text-4xl mb-2">⚡</div>
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Combo Builder</h4>
-              <p className="text-sm text-gray-600 dark:text-gray-300">Create and manage winning combinations</p>
-            </div>
-            <div className="text-center bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-              <div className="text-green-600 dark:text-green-400 text-4xl mb-2">🏆</div>
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Tournament Tracking</h4>
-              <p className="text-sm text-gray-600 dark:text-gray-300">Record results and analyze performance</p>
+            <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+              <div className="text-center bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                <div className="text-blue-600 dark:text-blue-400 text-4xl mb-2">📦</div>
+                <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Collection Management</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Track all your Beyblade parts and inventory</p>
+              </div>
+              <div className="text-center bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                <div className="text-purple-600 dark:text-purple-400 text-4xl mb-2">⚡</div>
+                <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Combo Builder</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Create and manage winning combinations</p>
+              </div>
+              <div className="text-center bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                <div className="text-green-600 dark:text-green-400 text-4xl mb-2">🏆</div>
+                <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Tournament Tracking</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Record results and analyze performance</p>
+              </div>
             </div>
           </div>
         </div>
+        <Footer />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen flex flex-col">
       <Navigation currentPage="home" />
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex-1">
         <div className="container mx-auto px-4 py-16">
           <header className="text-center mb-16">
             <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-4">
@@ -173,6 +177,7 @@ export default function Home() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

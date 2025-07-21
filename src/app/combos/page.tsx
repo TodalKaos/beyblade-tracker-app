@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Navigation from '@/components/Navigation'
+import Footer from '@/components/Footer'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { getAllParts, getAllCombos, addCombo, updateCombo, deleteCombo } from '@/services/database'
 import type { BeybladePartDB, ComboWithParts, BeybladeComboCreate, PartType } from '@/types/beyblade'
@@ -138,20 +139,21 @@ export default function Combos() {
 
     if (loading) {
         return (
-            <div className="min-h-screen">
+            <div className="min-h-screen flex flex-col">
                 <Navigation currentPage="combos" />
-                <div className="bg-gradient-to-br from-purple-50 to-pink-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center min-h-screen">
+                <div className="bg-gradient-to-br from-purple-50 to-pink-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center flex-1">
                     <div className="text-xl text-gray-600 dark:text-gray-300">Loading combos...</div>
                 </div>
+                <Footer />
             </div>
         )
     }
 
     return (
         <ProtectedRoute>
-            <div className="min-h-screen">
+            <div className="min-h-screen flex flex-col">
                 <Navigation currentPage="combos" />
-                <div className="bg-gradient-to-br from-purple-50 to-pink-100 dark:from-gray-900 dark:to-gray-800">
+                <div className="bg-gradient-to-br from-purple-50 to-pink-100 dark:from-gray-900 dark:to-gray-800 flex-1">
                     <div className="container mx-auto px-4 py-16">
                         <header className="text-center mb-16">
                             <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
@@ -526,6 +528,7 @@ export default function Combos() {
                         </div>
                     </div>
                 </div>
+                <Footer />
             </div>
         </ProtectedRoute>
     )

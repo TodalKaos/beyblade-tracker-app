@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { getAllParts, getCollectionStats, addPart, updatePart, deletePart, searchParts } from '@/services/database'
 import type { BeybladePartDB, BeybladePartCreate, PartType } from '@/types/beyblade'
 import Navigation from '@/components/Navigation'
+import Footer from '@/components/Footer'
 import ProtectedRoute from '@/components/ProtectedRoute'
 
 export default function Collection() {
@@ -162,20 +163,21 @@ export default function Collection() {
 
     if (loading) {
         return (
-            <div className="min-h-screen">
+            <div className="min-h-screen flex flex-col">
                 <Navigation currentPage="collection" />
-                <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+                <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center flex-1">
                     <div className="text-xl text-gray-600 dark:text-gray-300">Loading collection...</div>
                 </div>
+                <Footer />
             </div>
         )
     }
 
     return (
         <ProtectedRoute>
-            <div className="min-h-screen">
+            <div className="min-h-screen flex flex-col">
                 <Navigation currentPage="collection" />
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex-1">
                     <div className="container mx-auto px-4 py-16">
                         <header className="text-center mb-16">
                             <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
@@ -543,8 +545,8 @@ export default function Collection() {
                                                                         key={pageNum}
                                                                         onClick={() => goToPage(pageNum)}
                                                                         className={`px-2 sm:px-3 py-1 rounded-md text-sm transition-colors ${currentPage === pageNum
-                                                                                ? 'bg-blue-600 text-white dark:bg-blue-500'
-                                                                                : 'bg-gray-200 hover:bg-gray-300 text-gray-700 dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-white'
+                                                                            ? 'bg-blue-600 text-white dark:bg-blue-500'
+                                                                            : 'bg-gray-200 hover:bg-gray-300 text-gray-700 dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-white'
                                                                             }`}
                                                                     >
                                                                         {pageNum}
@@ -636,8 +638,8 @@ export default function Collection() {
                                                                     key={pageNum}
                                                                     onClick={() => goToPage(pageNum)}
                                                                     className={`px-2 sm:px-3 py-2 rounded-md text-sm transition-colors ${currentPage === pageNum
-                                                                            ? 'bg-blue-600 text-white dark:bg-blue-500'
-                                                                            : 'bg-gray-200 hover:bg-gray-300 text-gray-700 dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-white'
+                                                                        ? 'bg-blue-600 text-white dark:bg-blue-500'
+                                                                        : 'bg-gray-200 hover:bg-gray-300 text-gray-700 dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-white'
                                                                         }`}
                                                                 >
                                                                     {pageNum}
@@ -662,6 +664,7 @@ export default function Collection() {
                         </div>
                     </div>
                 </div>
+                <Footer />
             </div>
         </ProtectedRoute>
     )
