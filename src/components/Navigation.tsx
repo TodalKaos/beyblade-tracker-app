@@ -51,6 +51,15 @@ export default function Navigation({ currentPage }: NavigationProps) {
                             ⚡ Combos
                         </Link>
                         <Link
+                            href="/testing"
+                            className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${currentPage === 'testing'
+                                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
+                                : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'
+                                }`}
+                        >
+                            ⚔️ Testing
+                        </Link>
+                        <Link
                             href="/tournaments"
                             className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${currentPage === 'tournaments'
                                 ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'

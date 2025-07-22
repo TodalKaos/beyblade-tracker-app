@@ -8,7 +8,11 @@ import type {
     ComboWithParts,
     TournamentCreate,
     Tournament,
-    TournamentWithCombos
+    TournamentWithCombos,
+    TestBattle,
+    TestBattleCreate,
+    TestBattleWithCombos,
+    ComboTestStats
 } from '@/types/beyblade'
 
 // Get all parts for the current user
@@ -457,5 +461,173 @@ export async function getTournamentStats() {
         totalPoints,
         averagePoints,
         topComboPoints
+    }
+}
+
+// ========================================
+// TEST BATTLE FUNCTIONS
+// ========================================
+
+// Get all test battles for the current user
+export async function getAllTestBattles(): Promise<TestBattleWithCombos[]> {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('User not authenticated')
+
+    const { data, error } = await supabase
+        .from('test_battles')
+        .select(`
+            *,
+            combo1:beyblade_combos!test_battles_combo1_id_fkey (
+                *,
+                blade:beyblade_parts!beyblade_combos_blade_id_fkey (*),
+                assist_blade:beyblade_parts!beyblade_combos_assist_blade_id_fkey (*),
+                ratchet:beyblade_parts!beyblade_combos_ratchet_id_fkey (*),
+                bit:beyblade_parts!beyblade_combos_bit_id_fkey (*)
+            ),
+            combo2:beyblade_combos!test_battles_combo2_id_fkey (
+                *,
+                blade:beyblade_parts!beyblade_combos_blade_id_fkey (*),
+                assist_blade:beyblade_parts!beyblade_combos_assist_blade_id_fkey (*),
+                ratchet:beyblade_parts!beyblade_combos_ratchet_id_fkey (*),
+                bit:beyblade_parts!beyblade_combos_bit_id_fkey (*)
+            )
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+
+    if (error) {
+        console.error('Error fetching test battles:', error)
+        throw error
+    }
+
+    return data || []
+}
+
+// Add a new test battle
+export async function addTestBattle(battle: TestBattleCreate): Promise<TestBattle> {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('User not authenticated')
+
+    const { data, error } = await supabase
+        .from('test_battles')
+        .insert({
+            ...battle,
+            user_id: user.id
+        })
+        .select()
+        .single()
+
+    if (error) {
+        console.error('Error adding test battle:', error)
+        throw error
+    }
+
+    return data
+}
+
+// Get test battle statistics for combos
+export async function getComboTestStats(): Promise<ComboTestStats[]> {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('User not authenticated')
+
+    // Get all test battles for this user
+    const { data: battles, error: battlesError } = await supabase
+        .from('test_battles')
+        .select('*')
+        .eq('user_id', user.id)
+
+    if (battlesError) {
+        console.error('Error fetching battles for stats:', battlesError)
+        throw battlesError
+    }
+
+    // Get all combos for this user
+    const combos = await getAllCombos()
+
+    // Calculate stats for each combo
+    const stats: ComboTestStats[] = combos.map(combo => {
+        const comboId = combo.id
+
+        // Find all battles involving this combo
+        const comboBattles = battles?.filter(battle =>
+            battle.combo1_id === comboId || battle.combo2_id === comboId
+        ) || []
+
+        const totalBattles = comboBattles.length
+        const wins = comboBattles.filter(battle => battle.winner_combo_id === comboId).length
+        const losses = totalBattles - wins
+
+        // Calculate points scored and against
+        let totalPointsScored = 0
+        let totalPointsAgainst = 0
+
+        comboBattles.forEach(battle => {
+            if (battle.combo1_id === comboId) {
+                totalPointsScored += battle.combo1_score
+                totalPointsAgainst += battle.combo2_score
+            } else {
+                totalPointsScored += battle.combo2_score
+                totalPointsAgainst += battle.combo1_score
+            }
+        })
+
+        const winRate = totalBattles > 0 ? (wins / totalBattles) * 100 : 0
+        const averagePointsScored = totalBattles > 0 ? totalPointsScored / totalBattles : 0
+        const averagePointsAgainst = totalBattles > 0 ? totalPointsAgainst / totalBattles : 0
+
+        return {
+            combo_id: comboId,
+            combo,
+            total_battles: totalBattles,
+            wins,
+            losses,
+            total_points_scored: totalPointsScored,
+            total_points_against: totalPointsAgainst,
+            win_rate: Math.round(winRate * 100) / 100, // Round to 2 decimal places
+            average_points_scored: Math.round(averagePointsScored * 100) / 100,
+            average_points_against: Math.round(averagePointsAgainst * 100) / 100
+        }
+    })
+
+    // Sort by win rate, then by total battles
+    return stats.sort((a, b) => {
+        if (b.win_rate !== a.win_rate) {
+            return b.win_rate - a.win_rate
+        }
+        return b.total_battles - a.total_battles
+    })
+}
+
+// Update a test battle
+export async function updateTestBattle(id: number, updates: Partial<TestBattleCreate>): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('User not authenticated')
+
+    const { error } = await supabase
+        .from('test_battles')
+        .update(updates)
+        .eq('id', id)
+        .eq('user_id', user.id)
+
+    if (error) {
+        console.error('Error updating test battle:', error)
+        throw error
+    }
+}
+
+// Delete a test battle
+export async function deleteTestBattle(id: number): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('User not authenticated')
+
+    const { error } = await supabase
+        .from('test_battles')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id)
+
+    if (error) {
+        console.error('Error deleting test battle:', error)
+        throw error
     }
 }

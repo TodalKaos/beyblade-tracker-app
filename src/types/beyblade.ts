@@ -93,3 +93,46 @@ export interface TournamentCreate {
     total_players?: number
     notes?: string
 }
+
+// Testing/Practice Battle Types
+export type FinishType = 'spin' | 'over' | 'burst' | 'xtreme'
+
+export interface TestBattle {
+    id: number
+    created_at: string
+    combo1_id: number
+    combo2_id: number
+    combo1_score: number
+    combo2_score: number
+    winner_combo_id: number | null
+    battle_date: string
+    notes?: string
+}
+
+export interface TestBattleWithCombos extends TestBattle {
+    combo1: ComboWithParts
+    combo2: ComboWithParts
+}
+
+export interface TestBattleCreate {
+    combo1_id: number
+    combo2_id: number
+    combo1_score: number
+    combo2_score: number
+    winner_combo_id: number | null
+    battle_date: string
+    notes?: string
+}
+
+export interface ComboTestStats {
+    combo_id: number
+    combo: ComboWithParts
+    total_battles: number
+    wins: number
+    losses: number
+    total_points_scored: number
+    total_points_against: number
+    win_rate: number
+    average_points_scored: number
+    average_points_against: number
+}
