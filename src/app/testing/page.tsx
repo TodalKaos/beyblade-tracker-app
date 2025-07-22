@@ -38,14 +38,14 @@ export default function Testing() {
 
     // 🚀 PHASE 3C: Smart Recommendations & Tournament Integration state
     const [showRecommendations, setShowRecommendations] = useState(false)
-    const [practiceGoals, setPracticeGoals] = useState<Array<{
-        id: string
-        type: 'winStreak' | 'winRate' | 'beatSpecific' | 'tournament'
-        target: number | string
-        current: number
-        completed: boolean
-        combo?: ComboWithParts
-    }>>([])
+    // const [practiceGoals, setPracticeGoals] = useState<Array<{
+    //     id: string
+    //     type: 'winStreak' | 'winRate' | 'beatSpecific' | 'tournament'
+    //     target: number | string
+    //     current: number
+    //     completed: boolean
+    //     combo?: ComboWithParts
+    // }>>([])
     const [selectedDeckCombos, setSelectedDeckCombos] = useState<ComboWithParts[]>([])
     const [showDeckBuilder, setShowDeckBuilder] = useState(false)
 
@@ -91,17 +91,18 @@ export default function Testing() {
         }
     }
 
-    const loadCombos = async () => {
-        try {
-            setLoading(true)
-            const combosData = await getAllCombos()
-            setCombos(combosData)
-        } catch (error) {
-            console.error('Error loading combos:', error)
-        } finally {
-            setLoading(false)
-        }
-    }
+    // Commented out - not currently used but kept for future features
+    // const loadCombos = async () => {
+    //     try {
+    //         setLoading(true)
+    //         const combosData = await getAllCombos()
+    //         setCombos(combosData)
+    //     } catch (error) {
+    //         console.error('Error loading combos:', error)
+    //     } finally {
+    //         setLoading(false)
+    //     }
+    // }
 
     const getFilteredBattleHistory = () => {
         return battleHistory.filter(battle => {
@@ -245,8 +246,8 @@ export default function Testing() {
             const opponents: { [oppId: number]: { wins: number, losses: number, combo: ComboWithParts } } = {}
 
             battleHistory.forEach(battle => {
-                let isCombo1 = battle.combo1_id === combo.id
-                let isCombo2 = battle.combo2_id === combo.id
+                const isCombo1 = battle.combo1_id === combo.id
+                const isCombo2 = battle.combo2_id === combo.id
 
                 if (isCombo1 || isCombo2) {
                     const oppId = isCombo1 ? battle.combo2_id : battle.combo1_id
@@ -291,11 +292,11 @@ export default function Testing() {
             combo: ComboWithParts
             reason: string
             confidence: number
-            stats?: any
+            stats?: { wins: number[], winRate: number, trend: string, combo: ComboWithParts }
         }> = []
 
         const trends = getPerformanceTrends()
-        const streaks = getWinStreaks()
+        // const streaks = getWinStreaks() // Currently unused in recommendations logic
         const matrix = getStrengthWeaknessMatrix()
 
         // Top Performer Recommendations
@@ -507,11 +508,11 @@ export default function Testing() {
     }
 
     // Promote Battle to Tournament
-    const promoteBattleToTournament = (battle: TestBattleWithCombos) => {
-        // This would integrate with the tournament system
-        console.log('Promoting battle to tournament:', battle)
-        // Implementation would depend on tournament system structure
-    }
+    // const promoteBattleToTournament = (battle: TestBattleWithCombos) => {
+    //     // This would integrate with the tournament system
+    //     console.log('Promoting battle to tournament:', battle)
+    //     // Implementation would depend on tournament system structure
+    // }
 
     // 🔧 Edit Battle Functions
     const openEditBattle = (battle: TestBattleWithCombos) => {
@@ -1622,7 +1623,7 @@ export default function Testing() {
                                                 ⚔️ Head-to-Head Analysis
                                             </h3>
                                             <div className="space-y-4">
-                                                {getHeadToHeadStats().map((h2h, index) => (
+                                                {getHeadToHeadStats().map((h2h) => (
                                                     <div key={`${h2h.combo1.id}-${h2h.combo2.id}`} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
                                                         <div className="grid md:grid-cols-2 gap-6">
                                                             {/* Combo 1 */}
