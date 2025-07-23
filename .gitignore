@@ -42,3 +42,10 @@ next-env.d.ts
 
 # github copilot instructions (keep local only)
 .github/copilot-instructions.md
+
+# development documentation (keep local only)
+AUTH-SETUP.md
+DEPLOYMENT_FIX.md
+
+# vs code settings (keep local only)
+.vscode/
