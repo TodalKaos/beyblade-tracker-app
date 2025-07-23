@@ -387,53 +387,214 @@ export default function Testing() {
             })
         })
 
+        // Deck Synergy Recommendations (combos that work well together without part conflicts)
+        if (selectedDeckCombos.length > 0) {
+            const validation = validateDeckUniqueness(selectedDeckCombos)
+
+            if (!validation.isValid) {
+                // Find alternative combos that would make the deck valid
+                const conflictReplacements = combos.filter(combo => {
+                    // Check if this combo would resolve conflicts when replacing a deck combo
+                    return selectedDeckCombos.some((deckCombo, index) => {
+                        const tempDeck = [...selectedDeckCombos]
+                        tempDeck[index] = combo
+                        return validateDeckUniqueness(tempDeck).isValid
+                    })
+                }).slice(0, 2)
+
+                conflictReplacements.forEach(combo => {
+                    const trend = trends.find(t => t.combo.id === combo.id)
+                    recommendations.push({
+                        type: 'balanced',
+                        combo,
+                        reason: `Would resolve part conflicts in current deck selection - ${trend ? `${trend.winRate.toFixed(1)}% win rate` : 'untested combo'}`,
+                        confidence: trend ? trend.winRate : 40,
+                        stats: trend
+                    })
+                })
+            }
+        }
+
         return recommendations.slice(0, 6) // Top 6 recommendations
     }
 
-    // Tournament Deck Builder
+    // Tournament Deck Builder with Part Uniqueness Validation
     const buildOptimalDeck = () => {
         const trends = getPerformanceTrends()
         const matrix = getStrengthWeaknessMatrix()
 
-        // Strategy: Pick combos that cover each other's weaknesses
-        const eligibleCombos = trends.filter(t => t.winRate >= 40).sort((a, b) => b.winRate - a.winRate)
+        // Strategy: Pick combos that cover each other's weaknesses AND have unique parts
+        // Lower the minimum win rate threshold to include more combos
+        const eligibleCombos = trends.filter(t => t.winRate >= 30).sort((a, b) => b.winRate - a.winRate)
 
-        if (eligibleCombos.length < 3) {
-            return combos.slice(0, 3) // Fallback to any 3 combos
+        // Filter for complete combos first (have all 4 parts)
+        const completeCombos = combos.filter(combo =>
+            combo.blade && combo.assist_blade && combo.ratchet && combo.bit
+        )
+
+        if (completeCombos.length < 3) {
+            // If we don't have enough complete combos, use any combos we have
+            return combos.slice(0, 3)
         }
 
         const deck: ComboWithParts[] = []
         const usedCombos = new Set<number>()
+        const usedParts = {
+            blades: new Set<number>(),
+            assist_blades: new Set<number>(),
+            ratchets: new Set<number>(),
+            bits: new Set<number>()
+        }
 
-        // Pick the top performer
-        deck.push(eligibleCombos[0].combo)
-        usedCombos.add(eligibleCombos[0].combo.id)
+        // Helper function to check if a combo has unique parts
+        const hasUniquePartsFromDeck = (combo: ComboWithParts): boolean => {
+            if (combo.blade && usedParts.blades.has(combo.blade.id)) return false
+            if (combo.assist_blade && usedParts.assist_blades.has(combo.assist_blade.id)) return false
+            if (combo.ratchet && usedParts.ratchets.has(combo.ratchet.id)) return false
+            if (combo.bit && usedParts.bits.has(combo.bit.id)) return false
+            return true
+        }
 
-        // Pick combos that cover weaknesses
-        for (let i = 1; i < eligibleCombos.length && deck.length < 3; i++) {
-            const combo = eligibleCombos[i].combo
+        // Helper function to add combo parts to used parts tracking
+        const addPartsToUsed = (combo: ComboWithParts) => {
+            if (combo.blade) usedParts.blades.add(combo.blade.id)
+            if (combo.assist_blade) usedParts.assist_blades.add(combo.assist_blade.id)
+            if (combo.ratchet) usedParts.ratchets.add(combo.ratchet.id)
+            if (combo.bit) usedParts.bits.add(combo.bit.id)
+        }
+
+        // PHASE 1: Pick best performers with unique parts (prioritize performance)
+        const sortedCompleteCombos = completeCombos.sort((a, b) => {
+            const trendA = trends.find(t => t.combo.id === a.id)
+            const trendB = trends.find(t => t.combo.id === b.id)
+            const winRateA = trendA ? trendA.winRate : 0
+            const winRateB = trendB ? trendB.winRate : 0
+            return winRateB - winRateA
+        })
+
+        for (const combo of sortedCompleteCombos) {
+            if (deck.length >= 3) break
+
             if (usedCombos.has(combo.id)) continue
 
-            const comboMatrix = matrix.find(m => m.combo.id === combo.id)
-            if (!comboMatrix) continue
+            if (hasUniquePartsFromDeck(combo)) {
+                deck.push(combo)
+                usedCombos.add(combo.id)
+                addPartsToUsed(combo)
+            }
+        }
 
-            // Check if this combo can beat any of the current deck's weaknesses
-            const deckWeaknesses = deck.flatMap(deckCombo => {
-                const deckMatrix = matrix.find(m => m.combo.id === deckCombo.id)
-                return deckMatrix?.weaknesses || []
-            })
+        // PHASE 2: If we still need combos, try strategic coverage with slightly relaxed part requirements
+        if (deck.length < 3) {
+            // Sort remaining complete combos by win rate but be more flexible
+            const remainingCombos = completeCombos.filter(combo => !usedCombos.has(combo.id))
 
-            const canBeatWeaknesses = comboMatrix.strengths.some(strength =>
-                deckWeaknesses.some(weakness => weakness.id === strength.id)
-            )
+            for (const combo of remainingCombos) {
+                if (deck.length >= 3) break
 
-            if (canBeatWeaknesses || deck.length === 2) { // Take the 3rd combo regardless
+                // Count how many part conflicts this combo would create
+                let conflicts = 0
+                if (combo.blade && usedParts.blades.has(combo.blade.id)) conflicts++
+                if (combo.assist_blade && usedParts.assist_blades.has(combo.assist_blade.id)) conflicts++
+                if (combo.ratchet && usedParts.ratchets.has(combo.ratchet.id)) conflicts++
+                if (combo.bit && usedParts.bits.has(combo.bit.id)) conflicts++
+
+                // Only allow combos with minimal conflicts (0-1 conflicts max)
+                if (conflicts <= 1) {
+                    const trend = trends.find(t => t.combo.id === combo.id)
+                    const winRate = trend ? trend.winRate : 0
+
+                    // Prioritize combos with decent performance (at least 20% win rate or untested)
+                    if (winRate >= 20 || !trend) {
+                        deck.push(combo)
+                        usedCombos.add(combo.id)
+                        addPartsToUsed(combo)
+                    }
+                }
+            }
+        }
+
+        // PHASE 3: Last resort - if still under 3, add best remaining complete combos (even with some conflicts)
+        if (deck.length < 3) {
+            const remainingCombos = completeCombos
+                .filter(combo => !usedCombos.has(combo.id))
+                .sort((a, b) => {
+                    const trendA = trends.find(t => t.combo.id === a.id)
+                    const trendB = trends.find(t => t.combo.id === b.id)
+                    const winRateA = trendA ? trendA.winRate : 0
+                    const winRateB = trendB ? trendB.winRate : 0
+                    return winRateB - winRateA
+                })
+
+            for (const combo of remainingCombos) {
+                if (deck.length >= 3) break
+
                 deck.push(combo)
                 usedCombos.add(combo.id)
             }
         }
 
-        return deck
+        // FINAL FALLBACK: If we still don't have 3, use any combos available (shouldn't happen with complete combos)
+        if (deck.length < 3) {
+            for (const combo of combos) {
+                if (deck.length >= 3) break
+
+                if (!usedCombos.has(combo.id)) {
+                    deck.push(combo)
+                    usedCombos.add(combo.id)
+                }
+            }
+        }
+
+        return deck.slice(0, 3) // Ensure exactly 3 combos
+    }
+
+    // Validate deck has unique parts
+    const validateDeckUniqueness = (deck: ComboWithParts[]): { isValid: boolean, conflicts: string[] } => {
+        const usedParts = {
+            blades: new Map<number, string>(),
+            assist_blades: new Map<number, string>(),
+            ratchets: new Map<number, string>(),
+            bits: new Map<number, string>()
+        }
+
+        const conflicts: string[] = []
+
+        deck.forEach((combo) => {
+            if (combo.blade) {
+                if (usedParts.blades.has(combo.blade.id)) {
+                    conflicts.push(`Blade "${combo.blade.name}" is used in both "${usedParts.blades.get(combo.blade.id)}" and "${combo.name}"`)
+                } else {
+                    usedParts.blades.set(combo.blade.id, combo.name)
+                }
+            }
+
+            if (combo.assist_blade) {
+                if (usedParts.assist_blades.has(combo.assist_blade.id)) {
+                    conflicts.push(`Assist Blade "${combo.assist_blade.name}" is used in both "${usedParts.assist_blades.get(combo.assist_blade.id)}" and "${combo.name}"`)
+                } else {
+                    usedParts.assist_blades.set(combo.assist_blade.id, combo.name)
+                }
+            }
+
+            if (combo.ratchet) {
+                if (usedParts.ratchets.has(combo.ratchet.id)) {
+                    conflicts.push(`Ratchet "${combo.ratchet.name}" is used in both "${usedParts.ratchets.get(combo.ratchet.id)}" and "${combo.name}"`)
+                } else {
+                    usedParts.ratchets.set(combo.ratchet.id, combo.name)
+                }
+            }
+
+            if (combo.bit) {
+                if (usedParts.bits.has(combo.bit.id)) {
+                    conflicts.push(`Bit "${combo.bit.name}" is used in both "${usedParts.bits.get(combo.bit.id)}" and "${combo.name}"`)
+                } else {
+                    usedParts.bits.set(combo.bit.id, combo.name)
+                }
+            }
+        })
+
+        return { isValid: conflicts.length === 0, conflicts }
     }
 
     // Practice Goals System
@@ -1863,9 +2024,43 @@ export default function Testing() {
 
                                             {showDeckBuilder && selectedDeckCombos.length > 0 && (
                                                 <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
-                                                    <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4 text-center">
+                                                    <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-2 text-center">
                                                         🎯 AI-Optimized Tournament Deck
                                                     </h4>
+                                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 text-center">
+                                                        ✨ Each combo uses unique parts - no repeated Blades, Assist Blades, Ratchets, or Bits across the deck
+                                                    </p>
+
+                                                    {/* Deck Selection Summary */}
+                                                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-4">
+                                                        <div className="text-sm text-blue-800 dark:text-blue-300 text-center">
+                                                            <strong>Selected {selectedDeckCombos.length} combos</strong> from {combos.length} available
+                                                            {selectedDeckCombos.length < 3 && (
+                                                                <span className="block text-yellow-600 dark:text-yellow-400 mt-1">
+                                                                    ⚠️ Need more combos or parts to build full 3-combo deck
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Deck Validation */}
+                                                    {(() => {
+                                                        const validation = validateDeckUniqueness(selectedDeckCombos)
+                                                        return validation.isValid ? (
+                                                            <div className="bg-green-100 dark:bg-green-900 border border-green-400 text-green-700 dark:text-green-300 px-4 py-2 rounded mb-4 text-center">
+                                                                ✅ All parts are unique across the deck
+                                                            </div>
+                                                        ) : (
+                                                            <div className="bg-red-100 dark:bg-red-900 border border-red-400 text-red-700 dark:text-red-300 px-4 py-2 rounded mb-4">
+                                                                <div className="font-semibold mb-2">⚠️ Part Conflicts Detected:</div>
+                                                                <ul className="list-disc list-inside text-sm">
+                                                                    {validation.conflicts.map((conflict, index) => (
+                                                                        <li key={index}>{conflict}</li>
+                                                                    ))}
+                                                                </ul>
+                                                            </div>
+                                                        )
+                                                    })()}
                                                     <div className="grid md:grid-cols-3 gap-4 mb-6">
                                                         {selectedDeckCombos.map((combo, index) => (
                                                             <div key={combo.id} className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
