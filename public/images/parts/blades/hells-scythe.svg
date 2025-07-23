@@ -1,0 +1,8 @@
+<!-- Hells Scythe SVG placeholder -->
+<svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="80" height="80" rx="12" fill="#dc2626"/>
+  <path d="M40 15C50 15 58 23 58 33C58 43 50 51 40 51C30 51 22 43 22 33C22 23 30 15 40 15Z" fill="#ef4444"/>
+  <path d="M25 35L40 20L55 35L40 50L25 35Z" fill="#dc2626"/>
+  <path d="M35 30L40 25L45 30L40 35L35 30Z" fill="#991b1b"/>
+  <text x="40" y="75" text-anchor="middle" font-size="8" fill="#7f1d1d" font-family="Arial, sans-serif">HELLS</text>
+</svg>

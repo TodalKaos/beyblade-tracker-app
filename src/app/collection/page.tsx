@@ -6,6 +6,8 @@ import type { BeybladePartDB, BeybladePartCreate, PartType } from '@/types/beybl
 import Navigation from '@/components/Navigation'
 import Footer from '@/components/Footer'
 import ProtectedRoute from '@/components/ProtectedRoute'
+import AutocompleteInput from '@/components/AutocompleteInput'
+import { MASTER_PARTS } from '@/data/masterParts'
 
 export default function Collection() {
     const [parts, setParts] = useState<BeybladePartDB[]>([])
@@ -37,6 +39,14 @@ export default function Collection() {
         color: '',
         notes: ''
     })
+
+    // Helper function to get part image from master parts
+    const getPartImage = (partName: string, partType: PartType): string => {
+        const masterPart = MASTER_PARTS.find(
+            masterPart => masterPart.name.toLowerCase() === partName.toLowerCase() && masterPart.type === partType
+        )
+        return masterPart?.image || '/images/parts/placeholder.svg'
+    }
 
     const handleSearch = useCallback(async () => {
         try {
@@ -266,11 +276,12 @@ export default function Collection() {
                                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                                     Part Name
                                                 </label>
-                                                <input
-                                                    type="text"
+                                                <AutocompleteInput
                                                     value={newPart.name}
-                                                    onChange={(e) => setNewPart({ ...newPart, name: e.target.value })}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                                    onChange={(value) => setNewPart({ ...newPart, name: value })}
+                                                    type={newPart.type}
+                                                    existingParts={parts}
+                                                    placeholder="Start typing part name..."
                                                     required
                                                 />
                                             </div>
@@ -364,11 +375,12 @@ export default function Collection() {
                                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                                     Part Name
                                                 </label>
-                                                <input
-                                                    type="text"
+                                                <AutocompleteInput
                                                     value={editingPart.name}
-                                                    onChange={(e) => setEditingPart({ ...editingPart, name: e.target.value })}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                                    onChange={(value) => setEditingPart({ ...editingPart, name: value })}
+                                                    type={editingPart.type}
+                                                    existingParts={parts}
+                                                    placeholder="Start typing part name..."
                                                     required
                                                 />
                                             </div>
@@ -569,8 +581,22 @@ export default function Collection() {
 
                                         <div className="grid gap-4">
                                             {currentParts.map((part) => (
-                                                <div key={part.id} className="flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                                                    <div className="flex-1">
+                                                <div key={part.id} className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                                                    {/* Part Image */}
+                                                    <div className="flex-shrink-0">
+                                                        <img
+                                                            src={getPartImage(part.name, part.type)}
+                                                            alt={part.name}
+                                                            className="w-16 h-16 rounded-lg object-cover bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600"
+                                                            onError={(e) => {
+                                                                const target = e.target as HTMLImageElement
+                                                                target.src = '/images/parts/placeholder.svg'
+                                                            }}
+                                                        />
+                                                    </div>
+
+                                                    {/* Part Info */}
+                                                    <div className="flex-1 min-w-0">
                                                         <h4 className="font-semibold text-gray-900 dark:text-white">{part.name}</h4>
                                                         <p className="text-sm text-gray-600 dark:text-gray-300">
                                                             {part.type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
@@ -583,6 +609,8 @@ export default function Collection() {
                                                             </p>
                                                         )}
                                                     </div>
+
+                                                    {/* Quantity and Actions */}
                                                     <div className="flex items-center gap-4">
                                                         <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
                                                             x{part.quantity}

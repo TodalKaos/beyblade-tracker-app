@@ -1,0 +1,7 @@
+<!-- Dran Sword SVG placeholder -->
+<svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="80" height="80" rx="12" fill="#f59e0b"/>
+  <path d="M40 10L60 30L50 40L60 50L40 70L20 50L30 40L20 30L40 10Z" fill="#fbbf24"/>
+  <path d="M40 20L50 30L45 35L50 40L40 50L30 40L35 35L30 30L40 20Z" fill="#f59e0b"/>
+  <text x="40" y="75" text-anchor="middle" font-size="8" fill="#92400e" font-family="Arial, sans-serif">DRAN</text>
+</svg>

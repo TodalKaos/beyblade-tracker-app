@@ -1,0 +1,9 @@
+<!-- Wizard Arrow SVG placeholder -->
+<svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="80" height="80" rx="12" fill="#7c3aed"/>
+  <path d="M40 10L55 25L40 40L25 25L40 10Z" fill="#8b5cf6"/>
+  <path d="M40 40L50 50L40 70L30 50L40 40Z" fill="#7c3aed"/>
+  <path d="M35 20L40 15L45 20L40 25L35 20Z" fill="#6d28d9"/>
+  <path d="M35 50L40 45L45 50L40 55L35 50Z" fill="#6d28d9"/>
+  <text x="40" y="75" text-anchor="middle" font-size="7" fill="#581c87" font-family="Arial, sans-serif">WIZARD</text>
+</svg>
