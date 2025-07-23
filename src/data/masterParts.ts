@@ -38,6 +38,13 @@ export const MASTER_PARTS: MasterPart[] = [
     { name: 'Talon Ptera', type: 'blade', series: 'BX-ORG02', image: '/images/parts/blades/TalonPtera.jpg' },
     { name: 'Croc Crunch', type: 'blade', series: 'BX-00', image: '/images/parts/blades/CrocCrunch.jpg' },
     { name: 'Cobalt Drake', type: 'blade', series: 'BX-00', image: '/images/parts/blades/CobaltDrake.png' },
+    { name: 'Gill Shark', type: 'blade', series: 'BX-HASBRO', image: '/images/parts/blades/GillShark.jpg' },
+    { name: 'Shinobi Knife', type: 'blade', series: 'BX-00', image: '/images/parts/blades/ShinobiKnife.png' },
+    { name: 'Phoenix Feather', type: 'blade', series: 'BX-00', image: '/images/parts/blades/PhoenixFeather.png' },
+    { name: 'Samurai Steel', type: 'blade', series: 'BX-00', image: '/images/parts/blades/SamuraiSteel.jpg' },
+    { name: 'Tackle Goat', type: 'blade', series: 'BX-HASBRO', image: '/images/parts/blades/TackleGoat.jpg' },
+    { name: 'Tusk Mammoth', type: 'blade', series: 'BX-HASBRO', image: '/images/parts/blades/TuskMammoth.jpg' },
+    { name: 'Yell Kong', type: 'blade', series: 'BX-HASBRO', image: '/images/parts/blades/YellKong.jpg' },
 
 
     // UX Series Blades
@@ -56,6 +63,7 @@ export const MASTER_PARTS: MasterPart[] = [
     { name: 'Golem Rock', type: 'blade', series: 'UX-13', image: '/images/parts/blades/GolemRock.jpg' },
     { name: 'Scorpio Spear', type: 'blade', series: 'UX-14', image: '/images/parts/blades/ScorpioSpear.png' },
     { name: 'Shark Scale', type: 'blade', series: 'UX-15', image: '/images/parts/blades/SharkScale.png' },
+    { name: 'Hover Wyvern', type: 'blade', series: 'UX-HASBRO', image: '/images/parts/blades/HoverWyvern.jpg' },
 
 
     // CX Series Blades
@@ -70,6 +78,39 @@ export const MASTER_PARTS: MasterPart[] = [
     { name: 'Cerberus Flame', type: 'blade', series: 'CX-08', image: '/images/parts/blades/CerberusFlame.png' },
     { name: 'Whale Flame', type: 'blade', series: 'CX-08', image: '/images/parts/blades/WhaleFlame.png' },
     { name: 'Cerberus Dark', type: 'blade', series: 'CX-08', image: '/images/parts/blades/CerberusDark.png' },
+
+
+    // Collaboration Blades
+    { name: 'Captain America', type: 'blade', series: 'COLLAB', image: '/images/parts/blades/CaptainAmerica.jpg' },
+    { name: 'Darth Vader', type: 'blade', series: 'COLLAB', image: '/images/parts/blades/DarthVader.jpg' },
+    { name: 'General Grievous', type: 'blade', series: 'COLLAB', image: '/images/parts/blades/GeneralGrievous.jpg' },
+    { name: 'Iron Man', type: 'blade', series: 'COLLAB', image: '/images/parts/blades/IronMan.jpg' },
+    { name: 'Luke Skywalker', type: 'blade', series: 'COLLAB', image: '/images/parts/blades/LukeSkywalker.jpg' },
+    { name: 'Megatron', type: 'blade', series: 'COLLAB', image: '/images/parts/blades/Megatron.jpg' },
+    { name: 'Moff Gideon', type: 'blade', series: 'COLLAB', image: '/images/parts/blades/MoffGideon.jpg' },
+    { name: 'Obi-Wan Kenobi', type: 'blade', series: 'COLLAB', image: '/images/parts/blades/ObiWanKenobi.jpg' },
+    { name: 'Optimus Primal', type: 'blade', series: 'COLLAB', image: '/images/parts/blades/OptimusPrimal.jpg' },
+    { name: 'Optimus Prime', type: 'blade', series: 'COLLAB', image: '/images/parts/blades/OptimusPrime.jpg' },
+    { name: 'Red Hulk', type: 'blade', series: 'COLLAB', image: '/images/parts/blades/RedHulk.jpg' },
+    { name: 'Spider-Man', type: 'blade', series: 'COLLAB', image: '/images/parts/blades/SpiderMan.jpg' },
+    { name: 'Starscream', type: 'blade', series: 'COLLAB', image: '/images/parts/blades/Starscream.jpg' },
+    { name: 'Thanos', type: 'blade', series: 'COLLAB', image: '/images/parts/blades/Thanos.jpg' },
+    { name: 'The Mandalorian', type: 'blade', series: 'COLLAB', image: '/images/parts/blades/TheMandalorian.jpg' },
+    { name: 'Mosasaurus', type: 'blade', series: 'COLLAB', image: '/images/parts/blades/Mosasaurus.png' },
+    { name: 'Venom', type: 'blade', series: 'COLLAB', image: '/images/parts/blades/Venom.jpg' },
+
+
+    // X-Over Project Blades
+    { name: 'Draciel Shield', type: 'blade', series: 'X-OVER', image: '/images/parts/blades/DracielShield.png' },
+    { name: 'Dragoon Storm', type: 'blade', series: 'X-OVER', image: '/images/parts/blades/DragoonStorm.jpg' },
+    { name: 'Dranzer Spiral', type: 'blade', series: 'X-OVER', image: '/images/parts/blades/DranzerSpiral.png' },
+    { name: 'Driger Slash', type: 'blade', series: 'X-OVER', image: '/images/parts/blades/DrigerSlash.png' },
+    { name: 'Lightning L-Drago (Rapid-Hit Type)', type: 'blade', series: 'X-OVER', image: '/images/parts/blades/LightningLDragoRH.png' },
+    { name: 'Lightning L-Drago (Upper Type)', type: 'blade', series: 'X-OVER', image: '/images/parts/blades/LightningLDragoUT.png' },
+    { name: 'Rock Leone', type: 'blade', series: 'X-OVER', image: '/images/parts/blades/RockLeone.png' },
+    { name: 'Storm Pegasis', type: 'blade', series: 'X-OVER', image: '/images/parts/blades/StormPegasis.jpg' },
+    { name: 'Victory Valkyrie', type: 'blade', series: 'X-OVER', image: '/images/parts/blades/VictoryValkyrie.png' },
+    { name: 'Xeno Xcalibur', type: 'blade', series: 'X-OVER', image: '/images/parts/blades/XenoXcalibur.png' },
 
 
     // Assist Blades (fewer, as they're optional)
