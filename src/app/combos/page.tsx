@@ -125,7 +125,9 @@ export default function Combos() {
     }
 
     const getPartsByType = (type: PartType) => {
-        return parts.filter(part => part.type === type && part.quantity > 0)
+        return parts
+            .filter(part => part.type === type && part.quantity > 0)
+            .sort((a, b) => a.name.localeCompare(b.name))
     }
 
     const formatComboDisplay = (combo: ComboWithParts) => {

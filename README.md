@@ -23,45 +23,6 @@ A modern web application for tracking your Beyblade collection and tournament pe
 - Performance leaderboards and analytics
 - Win/loss statistics
 
-## Technology Stack
-
-- **Framework**: Next.js 15 with App Router
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **Development**: Turbopack for fast builds
-
-## Getting Started
-
-1. Install dependencies:
-```bash
-npm install
-```
-
-2. Run the development server:
-```bash
-npm run dev
-```
-
-3. Open [http://localhost:3000](http://localhost:3000) in your browser
-
-## Project Structure
-
-```
-src/
-├── app/
-│   ├── collection/       # Collection management pages
-│   ├── tournaments/      # Tournament tracking pages
-│   ├── page.tsx          # Homepage
-│   └── layout.tsx        # Root layout
-├── components/
-│   └── Navigation.tsx    # Shared navigation component
-├── lib/
-│   └── supabase.ts       # Supabase client configuration
-├── services/
-│   └── database.ts       # Database operations
-└── types/
-    └── beyblade.ts       # TypeScript type definitions
-```
 
 ## Development
 
@@ -71,13 +32,6 @@ The project uses:
 - **Tailwind CSS** for styling
 - **ESLint** for code quality
 
-## Future Enhancements
-
-- Database integration for data persistence
-- User authentication and profiles
-- Mobile app versions
-- Advanced analytics and reporting
-- Community features and sharing
 
 ## Beyblade X Parts Reference
 
