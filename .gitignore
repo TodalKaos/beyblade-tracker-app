@@ -49,3 +49,6 @@ DEPLOYMENT_FIX.md
 
 # vs code settings (keep local only)
 .vscode/
+
+# database schema files (keep local only)
+*.sql
