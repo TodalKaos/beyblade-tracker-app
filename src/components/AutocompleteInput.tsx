@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import type { BeybladePartDB, PartType } from '@/types/beyblade'
-import { searchMasterParts, type MasterPart } from '@/data/masterParts'
+import { searchMasterParts, type MasterPart, MASTER_PARTS } from '@/data/masterParts'
 
 interface AutocompleteInputProps {
     value: string
@@ -19,6 +19,14 @@ interface Suggestion {
     source: 'existing' | 'master'
     series?: string
     image?: string
+}
+
+// Helper function to get image for a part by name and type
+const getPartImage = (name: string, type: PartType): string | undefined => {
+    const masterPart = MASTER_PARTS.find(part =>
+        part.name.toLowerCase() === name.toLowerCase() && part.type === type
+    )
+    return masterPart?.image
 }
 
 export default function AutocompleteInput({
@@ -58,7 +66,7 @@ export default function AutocompleteInput({
                 name: part.name,
                 source: 'existing' as const,
                 series: part.series,
-                image: undefined // Existing parts don't have predefined images
+                image: getPartImage(part.name, part.type)
             }))
 
         // Then, add master parts that aren't already in user's collection
@@ -75,6 +83,14 @@ export default function AutocompleteInput({
                 series: part.series,
                 image: part.image
             }))
+
+        console.log('AutocompleteInput Debug:', {
+            searchTerm,
+            type,
+            existingPartsCount: existingParts.length,
+            masterMatchesCount: masterMatches.length,
+            masterMatches: masterMatches.slice(0, 3), // Log first 3 for debugging
+        })
 
         // Combine suggestions (existing first, then master)
         newSuggestions.push(...existingMatches.slice(0, 5)) // Limit existing to 5
