@@ -1,0 +1,36 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="256" fill="#3b82f6"/>
+  
+  <!-- Beyblade-inspired design -->
+  <!-- Outer ring -->
+  <circle cx="256" cy="256" r="200" fill="none" stroke="#ffffff" stroke-width="8"/>
+  
+  <!-- Inner spinning elements -->
+  <g transform="translate(256,256)">
+    <!-- Main blade elements -->
+    <g stroke="#ffffff" stroke-width="6" fill="#60a5fa">
+      <!-- Blade segments -->
+      <path d="M -120,0 A 120,120 0 0,1 -60,-104 L -30,-52 A 60,60 0 0,0 -60,0 Z"/>
+      <path d="M 60,-104 A 120,120 0 0,1 120,0 L 60,0 A 60,60 0 0,0 30,-52 Z"/>
+      <path d="M 120,0 A 120,120 0 0,1 60,104 L 30,52 A 60,60 0 0,0 60,0 Z"/>
+      <path d="M -60,104 A 120,120 0 0,1 -120,0 L -60,0 A 60,60 0 0,0 -30,52 Z"/>
+    </g>
+    
+    <!-- Center hub -->
+    <circle cx="0" cy="0" r="25" fill="#ffffff"/>
+    <circle cx="0" cy="0" r="15" fill="#3b82f6"/>
+    
+    <!-- Performance indicators -->
+    <g stroke="#fbbf24" stroke-width="3" fill="none">
+      <circle cx="0" cy="-70" r="8"/>
+      <circle cx="70" cy="0" r="8"/>
+      <circle cx="0" cy="70" r="8"/>
+      <circle cx="-70" cy="0" r="8"/>
+    </g>
+  </g>
+  
+  <!-- App name -->
+  <text x="256" y="420" text-anchor="middle" fill="#ffffff" font-family="Arial, sans-serif" font-size="32" font-weight="bold">BEYBLADE</text>
+  <text x="256" y="450" text-anchor="middle" fill="#e5e7eb" font-family="Arial, sans-serif" font-size="24">TRACKER</text>
+</svg>

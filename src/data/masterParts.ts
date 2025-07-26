@@ -222,7 +222,7 @@ export const MASTER_PARTS: MasterPart[] = [
         name: 'Shinobi Knife',
         type: 'blade',
         series: 'BX-00',
-        image: '/images/parts/blades/ShinobiKnife.png',
+        image: '/images/parts/blades/KnifeShinobi.png',
         stats: { attack: 23, defense: 50, stamina: 27, weight: 30.9, burstResistance: 0 }
     },
     {
