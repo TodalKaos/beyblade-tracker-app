@@ -188,12 +188,6 @@ export default function Combos() {
         return part ? part.id : null
     }
 
-    const getPartNameById = (id: number | null): string => {
-        if (!id) return ''
-        const part = parts.find(p => p.id === id)
-        return part ? part.name : ''
-    }
-
     const getComboStats = (combo: BeybladeComboCreate | ComboWithParts, formVals?: typeof formValues) => {
         let bladeName: string | undefined
         let assistBladeName: string | undefined

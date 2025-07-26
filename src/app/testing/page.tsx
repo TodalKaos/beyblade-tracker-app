@@ -421,11 +421,9 @@ export default function Testing() {
     // Tournament Deck Builder with Part Uniqueness Validation
     const buildOptimalDeck = () => {
         const trends = getPerformanceTrends()
-        const matrix = getStrengthWeaknessMatrix()
 
         // Strategy: Pick combos that cover each other's weaknesses AND have unique parts
         // Lower the minimum win rate threshold to include more combos
-        const eligibleCombos = trends.filter(t => t.winRate >= 30).sort((a, b) => b.winRate - a.winRate)
 
         // Filter for complete combos first (have all 4 parts)
         const completeCombos = combos.filter(combo =>

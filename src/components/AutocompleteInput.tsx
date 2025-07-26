@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import type { BeybladePartDB, PartType } from '@/types/beyblade'
-import { searchMasterParts, type MasterPart, MASTER_PARTS } from '@/data/masterParts'
+import { searchMasterParts, MASTER_PARTS } from '@/data/masterParts'
 
 interface AutocompleteInputProps {
     value: string
