@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Navigation from '@/components/Navigation'
 import Footer from '@/components/Footer'
 import ProtectedRoute from '@/components/ProtectedRoute'
@@ -10,14 +10,13 @@ import type { TournamentWithCombos, TournamentCreate, ComboWithParts, DeckRecomm
 export default function EnhancedTournaments() {
     const [tournaments, setTournaments] = useState<TournamentWithCombos[]>([])
     const [combos, setCombos] = useState<ComboWithParts[]>([])
-    const [isLoading, setIsLoading] = useState(true)
+    const [loading, setLoading] = useState(true)
     const [stats, setStats] = useState({
         totalTournaments: 0,
         totalPoints: 0,
         averagePoints: 0,
         topComboPoints: 0
     })
-    const [loading, setLoading] = useState(true)
 
     // UI State
     const [activeTab, setActiveTab] = useState<'tournaments' | 'calendar' | 'deck-builder' | 'practice'>('tournaments')
@@ -26,9 +25,6 @@ export default function EnhancedTournaments() {
     // Deck Builder State
     const [deckRecommendations, setDeckRecommendations] = useState<DeckRecommendation[]>([])
     const [selectedDeck, setSelectedDeck] = useState<ComboWithParts[]>([])
-
-    // Calendar State
-    const [showAddUpcomingForm, setShowAddUpcomingForm] = useState(false)
 
     // Form state for tournaments
     const [newTournament, setNewTournament] = useState<TournamentCreate>({
@@ -46,11 +42,7 @@ export default function EnhancedTournaments() {
         notes: ''
     })
 
-    useEffect(() => {
-        loadData()
-    }, [])
-
-    const loadData = async () => {
+    const loadData = useCallback(async () => {
         try {
             setLoading(true)
             const [tournamentsData, combosData, statsData] = await Promise.all([
@@ -74,9 +66,13 @@ export default function EnhancedTournaments() {
         } catch (error) {
             console.error('Error loading data:', error)
         } finally {
-            setIsLoading(false)
+            setLoading(false)
         }
-    }
+    }, [])
+
+    useEffect(() => {
+        loadData()
+    }, [loadData])
 
     // AI Deck Builder Logic
     const generateDeckRecommendations = async () => {
