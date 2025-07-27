@@ -45,6 +45,49 @@ export interface Tournament {
     notes?: string
 }
 
+// New types for enhanced tournament tracking
+export interface TournamentMatch {
+    id: number
+    created_at: string
+    tournament_id: number
+    round_number: number
+    opponent_name?: string
+    my_combo_id: number
+    opponent_combo?: string
+    result: 'win' | 'loss' | 'tie'
+    my_score: number
+    opponent_score: number
+    notes?: string
+}
+
+export interface TournamentMatchWithCombo extends TournamentMatch {
+    my_combo: ComboWithParts
+}
+
+export interface UpcomingTournament {
+    id: number
+    created_at: string
+    name: string
+    location?: string
+    tournament_date: string
+    entry_fee?: number
+    prize_pool?: string
+    format?: string
+    registration_deadline?: string
+    notes?: string
+    is_registered: boolean
+}
+
+export interface DeckRecommendation {
+    combos: ComboWithParts[]
+    confidence_score: number
+    reasons: string[]
+    expected_performance: {
+        win_rate: number
+        avg_points: number
+    }
+}
+
 // Extended combo with part details for display
 export interface ComboWithParts extends BeybladeCombo {
     blade?: BeybladePartDB
@@ -92,6 +135,30 @@ export interface TournamentCreate {
     placement?: number
     total_players?: number
     notes?: string
+}
+
+export interface TournamentMatchCreate {
+    tournament_id: number
+    round_number: number
+    opponent_name?: string
+    my_combo_id: number
+    opponent_combo?: string
+    result: 'win' | 'loss' | 'tie'
+    my_score: number
+    opponent_score: number
+    notes?: string
+}
+
+export interface UpcomingTournamentCreate {
+    name: string
+    location?: string
+    tournament_date: string
+    entry_fee?: number
+    prize_pool?: string
+    format?: string
+    registration_deadline?: string
+    notes?: string
+    is_registered: boolean
 }
 
 // Testing/Practice Battle Types
