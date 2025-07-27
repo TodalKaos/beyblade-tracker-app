@@ -4,13 +4,13 @@ import { useState, useEffect } from 'react'
 import Navigation from '@/components/Navigation'
 import Footer from '@/components/Footer'
 import ProtectedRoute from '@/components/ProtectedRoute'
-import { getAllTournaments, getTournamentStats, addTournament, updateTournament, deleteTournament, getAllCombos, getComboTestStats } from '@/services/database'
-import type { TournamentWithCombos, TournamentCreate, ComboWithParts, TournamentMatch, UpcomingTournament, DeckRecommendation, ComboTestStats } from '@/types/beyblade'
+import { getAllTournaments, getTournamentStats, addTournament, getAllCombos, getComboTestStats } from '@/services/database'
+import type { TournamentWithCombos, TournamentCreate, ComboWithParts, DeckRecommendation } from '@/types/beyblade'
 
 export default function EnhancedTournaments() {
     const [tournaments, setTournaments] = useState<TournamentWithCombos[]>([])
     const [combos, setCombos] = useState<ComboWithParts[]>([])
-    const [upcomingTournaments, setUpcomingTournaments] = useState<UpcomingTournament[]>([])
+    const [isLoading, setIsLoading] = useState(true)
     const [stats, setStats] = useState({
         totalTournaments: 0,
         totalPoints: 0,
@@ -22,43 +22,13 @@ export default function EnhancedTournaments() {
     // UI State
     const [activeTab, setActiveTab] = useState<'tournaments' | 'calendar' | 'deck-builder' | 'practice'>('tournaments')
     const [showAddForm, setShowAddForm] = useState(false)
-    const [showEditForm, setShowEditForm] = useState(false)
-    const [editingTournament, setEditingTournament] = useState<TournamentWithCombos | null>(null)
-    const [selectedTournament, setSelectedTournament] = useState<TournamentWithCombos | null>(null)
-    const [showMatchDetails, setShowMatchDetails] = useState(false)
-
-    // Tournament Matches State
-    const [tournamentMatches, setTournamentMatches] = useState<TournamentMatch[]>([])
-    const [showAddMatchForm, setShowAddMatchForm] = useState(false)
-    const [newMatch, setNewMatch] = useState({
-        round_number: 1,
-        opponent_name: '',
-        my_combo_id: 0,
-        opponent_combo: '',
-        result: 'win' as 'win' | 'loss' | 'tie',
-        my_score: 0,
-        opponent_score: 0,
-        notes: ''
-    })
 
     // Deck Builder State
     const [deckRecommendations, setDeckRecommendations] = useState<DeckRecommendation[]>([])
     const [selectedDeck, setSelectedDeck] = useState<ComboWithParts[]>([])
-    const [deckBuilderMode, setDeckBuilderMode] = useState<'auto' | 'manual'>('auto')
 
     // Calendar State
     const [showAddUpcomingForm, setShowAddUpcomingForm] = useState(false)
-    const [newUpcomingTournament, setNewUpcomingTournament] = useState({
-        name: '',
-        location: '',
-        tournament_date: new Date().toISOString().split('T')[0],
-        entry_fee: 0,
-        prize_pool: '',
-        format: '',
-        registration_deadline: '',
-        notes: '',
-        is_registered: false
-    })
 
     // Form state for tournaments
     const [newTournament, setNewTournament] = useState<TournamentCreate>({
@@ -100,16 +70,16 @@ export default function EnhancedTournaments() {
             )
 
             // Generate deck recommendations
-            generateDeckRecommendations(combosData)
+            generateDeckRecommendations()
         } catch (error) {
             console.error('Error loading data:', error)
         } finally {
-            setLoading(false)
+            setIsLoading(false)
         }
     }
 
     // AI Deck Builder Logic
-    const generateDeckRecommendations = async (availableCombos: ComboWithParts[]) => {
+    const generateDeckRecommendations = async () => {
         try {
             // Get combo performance stats
             const comboStats = await getComboTestStats()
@@ -311,13 +281,13 @@ export default function EnhancedTournaments() {
                             {/* Navigation Tabs */}
                             <div className="mb-8">
                                 <div className="flex space-x-1 bg-white dark:bg-gray-800 p-1 rounded-lg shadow-sm">
-                                    {['tournaments', 'calendar', 'deck-builder', 'practice'].map((tab) => (
+                                    {(['tournaments', 'calendar', 'deck-builder', 'practice'] as const).map((tab) => (
                                         <button
                                             key={tab}
-                                            onClick={() => setActiveTab(tab as any)}
+                                            onClick={() => setActiveTab(tab)}
                                             className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors ${activeTab === tab
-                                                    ? 'bg-green-600 text-white shadow-sm'
-                                                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                                                ? 'bg-green-600 text-white shadow-sm'
+                                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                                                 }`}
                                         >
                                             {tab === 'tournaments' && '🏆 Tournaments'}
@@ -381,11 +351,7 @@ export default function EnhancedTournaments() {
                             )}
 
                             {activeTab === 'calendar' && (
-                                <CalendarTab
-                                    upcomingTournaments={upcomingTournaments}
-                                    showAddUpcomingForm={showAddUpcomingForm}
-                                    setShowAddUpcomingForm={setShowAddUpcomingForm}
-                                />
+                                <CalendarTab />
                             )}
                         </div>
                     </div>
@@ -397,7 +363,25 @@ export default function EnhancedTournaments() {
 }
 
 // Tab Components
-function TournamentsTab({ tournaments, combos, showAddForm, setShowAddForm, newTournament, setNewTournament, handleAddTournament, formatComboName }: any) {
+function TournamentsTab({
+    tournaments,
+    combos,
+    showAddForm,
+    setShowAddForm,
+    newTournament,
+    setNewTournament,
+    handleAddTournament,
+    formatComboName
+}: {
+    tournaments: TournamentWithCombos[]
+    combos: ComboWithParts[]
+    showAddForm: boolean
+    setShowAddForm: (show: boolean) => void
+    newTournament: TournamentCreate
+    setNewTournament: React.Dispatch<React.SetStateAction<TournamentCreate>>
+    handleAddTournament: (e: React.FormEvent) => Promise<void>
+    formatComboName: (combo: ComboWithParts | null | undefined) => string
+}) {
     return (
         <div>
             {/* Add Tournament Button */}
@@ -469,7 +453,7 @@ function TournamentsTab({ tournaments, combos, showAddForm, setShowAddForm, newT
                                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                                         >
                                             <option value="">Select combo...</option>
-                                            {combos.map((combo) => (
+                                            {combos.map((combo: ComboWithParts) => (
                                                 <option key={combo.id} value={combo.id}>
                                                     {formatComboName(combo)}
                                                 </option>
@@ -518,7 +502,7 @@ function TournamentsTab({ tournaments, combos, showAddForm, setShowAddForm, newT
                         <p>Add your first tournament to start tracking your performance!</p>
                     </div>
                 ) : (
-                    tournaments.map((tournament: any) => (
+                    tournaments.map((tournament: TournamentWithCombos) => (
                         <div key={tournament.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
                             <div className="flex justify-between items-start mb-4">
                                 <div>
@@ -571,7 +555,17 @@ function TournamentsTab({ tournaments, combos, showAddForm, setShowAddForm, newT
     )
 }
 
-function DeckBuilderTab({ deckRecommendations, selectedDeck, setSelectedDeck, formatComboName }: any) {
+function DeckBuilderTab({
+    deckRecommendations,
+    selectedDeck,
+    setSelectedDeck,
+    formatComboName
+}: {
+    deckRecommendations: DeckRecommendation[]
+    selectedDeck: ComboWithParts[]
+    setSelectedDeck: React.Dispatch<React.SetStateAction<ComboWithParts[]>>
+    formatComboName: (combo: ComboWithParts | null | undefined) => string
+}) {
     return (
         <div>
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
@@ -586,7 +580,7 @@ function DeckBuilderTab({ deckRecommendations, selectedDeck, setSelectedDeck, fo
                     </div>
                 ) : (
                     <div className="space-y-4">
-                        {deckRecommendations.map((rec: any, index: number) => (
+                        {deckRecommendations.map((rec: DeckRecommendation, index: number) => (
                             <div key={index} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
                                 <div className="flex justify-between items-start mb-3">
                                     <div>
@@ -611,8 +605,8 @@ function DeckBuilderTab({ deckRecommendations, selectedDeck, setSelectedDeck, fo
                                 </div>
 
                                 <div className="grid md:grid-cols-3 gap-3 mb-3">
-                                    {rec.combos.map((combo: any, comboIndex: number) => (
-                                        <div key={combo.id} className="bg-gray-50 dark:bg-gray-700 rounded p-2">
+                                    {rec.combos.map((combo: ComboWithParts, comboIndex: number) => (
+                                        <div key={`${combo.id}-${comboIndex}`} className="bg-gray-50 dark:bg-gray-700 rounded p-2">
                                             <div className="text-sm font-medium text-gray-900 dark:text-white">
                                                 {formatComboName(combo)}
                                             </div>
@@ -638,8 +632,8 @@ function DeckBuilderTab({ deckRecommendations, selectedDeck, setSelectedDeck, fo
                         Selected Tournament Deck
                     </h3>
                     <div className="grid md:grid-cols-3 gap-4">
-                        {selectedDeck.map((combo: any, index: number) => (
-                            <div key={combo.id} className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
+                        {selectedDeck.map((combo: ComboWithParts, index: number) => (
+                            <div key={`selected-${combo.id}-${index}`} className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
                                 <h4 className="font-semibold text-green-900 dark:text-green-300">
                                     Deck Slot {index + 1}
                                 </h4>
@@ -658,7 +652,21 @@ function DeckBuilderTab({ deckRecommendations, selectedDeck, setSelectedDeck, fo
     )
 }
 
-function PracticeTab({ selectedDeck, generatePracticeRecommendations, formatComboName }: any) {
+function PracticeTab({
+    selectedDeck,
+    generatePracticeRecommendations,
+    formatComboName
+}: {
+    selectedDeck: ComboWithParts[]
+    generatePracticeRecommendations: () => Array<{
+        type: string
+        title: string
+        description: string
+        combos: ComboWithParts[]
+        priority: string
+    }>
+    formatComboName: (combo: ComboWithParts | null | undefined) => string
+}) {
     return (
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
@@ -671,12 +679,12 @@ function PracticeTab({ selectedDeck, generatePracticeRecommendations, formatComb
                 </div>
             ) : (
                 <div className="space-y-4">
-                    {generatePracticeRecommendations().map((rec: any, index: number) => (
+                    {generatePracticeRecommendations().map((rec, index: number) => (
                         <div key={index} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
                             <div className="flex items-center gap-2 mb-2">
                                 <div className={`px-2 py-1 rounded text-sm ${rec.priority === 'high'
-                                        ? 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300'
-                                        : 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300'
+                                    ? 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300'
+                                    : 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300'
                                     }`}>
                                     {rec.priority === 'high' ? '🔥 High Priority' : '⚠️ Medium Priority'}
                                 </div>
@@ -685,7 +693,7 @@ function PracticeTab({ selectedDeck, generatePracticeRecommendations, formatComb
                             <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{rec.description}</p>
 
                             <div className="flex flex-wrap gap-2">
-                                {rec.combos.map((combo: any) => (
+                                {rec.combos.map((combo: ComboWithParts) => (
                                     <div key={combo.id} className="bg-gray-50 dark:bg-gray-700 rounded px-3 py-1">
                                         <span className="text-sm text-gray-900 dark:text-white">
                                             {formatComboName(combo)}
@@ -711,24 +719,18 @@ function PracticeTab({ selectedDeck, generatePracticeRecommendations, formatComb
     )
 }
 
-function CalendarTab({ upcomingTournaments, showAddUpcomingForm, setShowAddUpcomingForm }: any) {
+function CalendarTab() {
     return (
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
             <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
                     Upcoming Tournaments
                 </h3>
-                <button
-                    onClick={() => setShowAddUpcomingForm(true)}
-                    className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
-                >
-                    + Add Tournament
-                </button>
             </div>
 
             <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                 <p>No upcoming tournaments scheduled.</p>
-                <p className="text-sm mt-2">Add tournaments to track registration deadlines and prepare your decks!</p>
+                <p className="text-sm mt-2">Check back later for tournament announcements!</p>
             </div>
         </div>
     )
