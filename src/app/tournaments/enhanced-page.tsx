@@ -311,10 +311,10 @@ export default function EnhancedTournaments() {
                             {/* Navigation Tabs */}
                             <div className="mb-8">
                                 <div className="flex space-x-1 bg-white dark:bg-gray-800 p-1 rounded-lg shadow-sm">
-                                    {['tournaments', 'calendar', 'deck-builder', 'practice'].map((tab) => (
+                                    {(['tournaments', 'calendar', 'deck-builder', 'practice'] as const).map((tab) => (
                                         <button
                                             key={tab}
-                                            onClick={() => setActiveTab(tab as any)}
+                                            onClick={() => setActiveTab(tab)}
                                             className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors ${activeTab === tab
                                                     ? 'bg-green-600 text-white shadow-sm'
                                                     : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
