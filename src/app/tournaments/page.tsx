@@ -80,92 +80,96 @@ export default function EnhancedTournaments() {
             // Get combo performance stats
             const comboStats = await getComboTestStats()
 
-            // Create deck recommendations based on performance
-            const recommendations: DeckRecommendation[] = []
-
-            // Strategy 1: Best Win Rate Deck
-            const topWinRateCombos = comboStats
-                .filter(stat => stat.total_battles >= 3) // Only combos with enough data
-                .sort((a, b) => b.win_rate - a.win_rate)
-                .slice(0, 3)
-                .map(stat => stat.combo)
-
-            if (topWinRateCombos.length >= 3) {
-                recommendations.push({
-                    combos: topWinRateCombos,
-                    confidence_score: 85,
-                    reasons: [
-                        'Highest individual win rates',
-                        'Proven battle performance',
-                        'Consistent scoring potential'
-                    ],
-                    expected_performance: {
-                        win_rate: topWinRateCombos.reduce((sum, _, i) => sum + comboStats[i].win_rate, 0) / 3,
-                        avg_points: topWinRateCombos.reduce((sum, _, i) => sum + comboStats[i].average_points_scored, 0) / 3
-                    }
-                })
+            if (comboStats.length === 0) {
+                setDeckRecommendations([])
+                return
             }
 
-            // Strategy 2: Balanced Attack/Defense/Stamina Deck
-            const attackCombos = comboStats.filter(stat =>
-                stat.combo.blade?.name?.toLowerCase().includes('attack') ||
-                stat.average_points_scored > 2.5
-            )
-            const defenseCombos = comboStats.filter(stat =>
-                stat.combo.blade?.name?.toLowerCase().includes('defense') ||
-                stat.average_points_against < 2.0
-            )
-            const staminaCombos = comboStats.filter(stat =>
-                stat.combo.blade?.name?.toLowerCase().includes('stamina') ||
-                stat.win_rate > 60
-            )
+            // Create single optimized deck recommendation
+            let bestDeck: ComboWithParts[] = []
+            let confidenceScore = 0
+            let reasons: string[] = []
+            let expectedPerformance = { win_rate: 0, avg_points: 0 }
 
-            const balancedDeck = [
-                attackCombos[0]?.combo,
-                defenseCombos[0]?.combo || comboStats[1]?.combo,
-                staminaCombos[0]?.combo || comboStats[2]?.combo
-            ].filter(Boolean)
-
-            if (balancedDeck.length >= 3) {
-                recommendations.push({
-                    combos: balancedDeck as ComboWithParts[],
-                    confidence_score: 75,
-                    reasons: [
-                        'Balanced type coverage',
-                        'Versatile against different opponents',
-                        'Strategic depth and adaptability'
-                    ],
-                    expected_performance: {
-                        win_rate: 65,
-                        avg_points: 2.2
-                    }
-                })
-            }
-
-            // Strategy 3: Meta Counter Deck (based on common opponent combos)
-            const metaCounterDeck = comboStats
-                .filter(stat => stat.total_battles >= 2)
-                .sort((a, b) => (b.average_points_scored - b.average_points_against) - (a.average_points_scored - a.average_points_against))
-                .slice(0, 3)
-                .map(stat => stat.combo)
-
-            if (metaCounterDeck.length >= 3) {
-                recommendations.push({
-                    combos: metaCounterDeck,
-                    confidence_score: 70,
-                    reasons: [
-                        'Strong point differential',
-                        'Effective against tested opponents',
-                        'Proven clutch performance'
-                    ],
-                    expected_performance: {
-                        win_rate: 58,
+            // Strategy: Prioritize combos with battle data, then fall back to tournament performance
+            const combosWithBattleData = comboStats.filter(stat => stat.total_battles >= 2)
+            
+            if (combosWithBattleData.length >= 3) {
+                // Use battle-tested combos with highest composite score
+                const scoredCombos = combosWithBattleData.map(stat => ({
+                    combo: stat.combo,
+                    score: (stat.win_rate * 0.4) + (stat.average_points_scored * 10) + ((stat.average_points_scored - stat.average_points_against) * 5),
+                    winRate: stat.win_rate,
+                    avgPoints: stat.average_points_scored
+                }))
+                
+                bestDeck = scoredCombos
+                    .sort((a, b) => b.score - a.score)
+                    .slice(0, 3)
+                    .map(item => item.combo)
+                
+                confidenceScore = 90
+                reasons = [
+                    'Battle-tested performance data',
+                    'Optimized composite scoring',
+                    'Proven tournament viability'
+                ]
+                
+                const avgWinRate = scoredCombos.slice(0, 3).reduce((sum, item) => sum + item.winRate, 0) / 3
+                const avgPointsScored = scoredCombos.slice(0, 3).reduce((sum, item) => sum + item.avgPoints, 0) / 3
+                
+                expectedPerformance = {
+                    win_rate: avgWinRate,
+                    avg_points: avgPointsScored
+                }
+            } else {
+                // Fall back to tournament performance if limited battle data
+                const tournamentCombos = combos
+                    .filter(combo => combo.tournaments_used > 0)
+                    .map(combo => ({
+                        combo,
+                        score: (combo.total_points / Math.max(combo.tournaments_used, 1)) + (combo.wins * 2) - combo.losses
+                    }))
+                    .sort((a, b) => b.score - a.score)
+                    .slice(0, 3)
+                
+                if (tournamentCombos.length >= 3) {
+                    bestDeck = tournamentCombos.map(item => item.combo)
+                    confidenceScore = 65
+                    reasons = [
+                        'Tournament performance history',
+                        'Points per tournament optimization',
+                        'Win/loss ratio consideration'
+                    ]
+                    expectedPerformance = {
+                        win_rate: 55,
                         avg_points: 2.0
                     }
-                })
+                } else {
+                    // Last resort: use any available combos
+                    bestDeck = combos.slice(0, 3)
+                    confidenceScore = 40
+                    reasons = [
+                        'Based on available combos',
+                        'Limited performance data',
+                        'Requires testing for optimization'
+                    ]
+                    expectedPerformance = {
+                        win_rate: 50,
+                        avg_points: 1.5
+                    }
+                }
             }
 
-            setDeckRecommendations(recommendations)
+            // Create single recommendation
+            const recommendation: DeckRecommendation = {
+                combos: bestDeck,
+                confidence_score: confidenceScore,
+                reasons,
+                expected_performance: expectedPerformance
+            }
+
+            setDeckRecommendations([recommendation])
         } catch (error) {
             console.error('Error generating deck recommendations:', error)
         }
@@ -596,16 +600,22 @@ function DeckBuilderTab({
                         <p className="text-sm mt-2">Go to the Testing page to battle your combos and build performance data.</p>
                     </div>
                 ) : (
-                    <div className="space-y-4">
+                    <div>
                         {deckRecommendations.map((rec: DeckRecommendation, index: number) => (
                             <div key={index} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
                                 <div className="flex justify-between items-start mb-3">
                                     <div>
-                                        <h4 className="font-semibold text-gray-900 dark:text-white">
-                                            Strategy {index + 1}
+                                        <h4 className="font-semibold text-gray-900 dark:text-white text-lg">
+                                            Optimal Tournament Deck
                                         </h4>
                                         <div className="flex items-center gap-2 mt-1">
-                                            <div className="bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300 px-2 py-1 rounded text-sm">
+                                            <div className={`px-2 py-1 rounded text-sm ${
+                                                rec.confidence_score >= 80 
+                                                    ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300'
+                                                    : rec.confidence_score >= 60
+                                                    ? 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300'
+                                                    : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300'
+                                            }`}>
                                                 {rec.confidence_score}% Confidence
                                             </div>
                                             <div className="text-sm text-gray-600 dark:text-gray-400">
@@ -615,27 +625,37 @@ function DeckBuilderTab({
                                     </div>
                                     <button
                                         onClick={() => setSelectedDeck(rec.combos)}
-                                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
+                                        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold"
                                     >
-                                        Select Deck
+                                        Use This Deck
                                     </button>
                                 </div>
 
-                                <div className="grid md:grid-cols-3 gap-3 mb-3">
+                                <div className="grid md:grid-cols-3 gap-3 mb-4">
                                     {rec.combos.map((combo: ComboWithParts, comboIndex: number) => (
-                                        <div key={`${combo.id}-${comboIndex}`} className="bg-gray-50 dark:bg-gray-700 rounded p-2">
+                                        <div key={`${combo.id}-${comboIndex}`} className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg p-3 border border-blue-200 dark:border-blue-700">
+                                            <div className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-1">
+                                                Deck Slot {comboIndex + 1}
+                                            </div>
                                             <div className="text-sm font-medium text-gray-900 dark:text-white">
                                                 {formatComboName(combo)}
                                             </div>
-                                            <div className="text-xs text-gray-600 dark:text-gray-400">
-                                                {combo.wins}W-{combo.losses}L • {combo.total_points}pts
+                                            <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                                {combo.wins}W-{combo.losses}L • {combo.total_points}pts total
                                             </div>
                                         </div>
                                     ))}
                                 </div>
 
-                                <div className="text-sm text-gray-600 dark:text-gray-400">
-                                    <strong>Why this works:</strong> {rec.reasons.join(', ')}
+                                <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                                    <div className="text-sm font-medium text-gray-900 dark:text-white mb-1">
+                                        Why this deck is recommended:
+                                    </div>
+                                    <ul className="text-sm text-gray-600 dark:text-gray-400 list-disc list-inside">
+                                        {rec.reasons.map((reason, reasonIndex) => (
+                                            <li key={reasonIndex}>{reason}</li>
+                                        ))}
+                                    </ul>
                                 </div>
                             </div>
                         ))}
