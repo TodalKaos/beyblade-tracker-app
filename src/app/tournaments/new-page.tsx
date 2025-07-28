@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import Navigation from '@/components/Navigation'
 import Footer from '@/components/Footer'
 import ProtectedRoute from '@/components/ProtectedRoute'
-import { getAllTournaments, getTournamentStats, addTournament, getAllCombos, getComboTestStats } from '@/services/database'
+import { getAllTournaments, getTournamentStats, addTournament, deleteTournament, getAllCombos, getComboTestStats } from '@/services/database'
 import type { TournamentWithCombos, TournamentCreate, ComboWithParts, DeckRecommendation } from '@/types/beyblade'
 
 export default function EnhancedTournaments() {
@@ -235,6 +235,17 @@ export default function EnhancedTournaments() {
         }
     }
 
+    const handleDeleteTournament = async (tournamentId: number) => {
+        if (window.confirm('Are you sure you want to delete this tournament? This action cannot be undone.')) {
+            try {
+                await deleteTournament(tournamentId)
+                loadData() // Reload the data to update the list
+            } catch (error) {
+                console.error('Error deleting tournament:', error)
+            }
+        }
+    }
+
     const formatComboName = (combo: ComboWithParts | null | undefined): string => {
         if (!combo) return 'No combo selected'
 
@@ -325,6 +336,7 @@ export default function EnhancedTournaments() {
                                     newTournament={newTournament}
                                     setNewTournament={setNewTournament}
                                     handleAddTournament={handleAddTournament}
+                                    handleDeleteTournament={handleDeleteTournament}
                                     formatComboName={formatComboName}
                                 />
                             )}
@@ -367,6 +379,7 @@ function TournamentsTab({
     newTournament,
     setNewTournament,
     handleAddTournament,
+    handleDeleteTournament,
     formatComboName
 }: {
     tournaments: TournamentWithCombos[]
@@ -376,6 +389,7 @@ function TournamentsTab({
     newTournament: TournamentCreate
     setNewTournament: React.Dispatch<React.SetStateAction<TournamentCreate>>
     handleAddTournament: (e: React.FormEvent) => Promise<void>
+    handleDeleteTournament: (tournamentId: number) => Promise<void>
     formatComboName: (combo: ComboWithParts | null | undefined) => string
 }) {
     return (
@@ -516,6 +530,13 @@ function TournamentsTab({
                                         {tournament.total_points} points total
                                     </p>
                                 </div>
+                                <button
+                                    onClick={() => handleDeleteTournament(tournament.id)}
+                                    className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+                                    title="Delete Tournament"
+                                >
+                                    🗑️ Delete
+                                </button>
                             </div>
 
                             <div className="grid md:grid-cols-3 gap-4">
