@@ -19,7 +19,7 @@ export default function EnhancedTournaments() {
     })
 
     // UI State
-    const [activeTab, setActiveTab] = useState<'tournaments' | 'calendar' | 'deck-builder' | 'practice'>('tournaments')
+    const [activeTab, setActiveTab] = useState<'tournaments' | 'deck-builder' | 'practice'>('tournaments')
     const [showAddForm, setShowAddForm] = useState(false)
     const [showEditForm, setShowEditForm] = useState(false)
     const [editingTournament, setEditingTournament] = useState<TournamentWithCombos | null>(null)
@@ -365,7 +365,7 @@ export default function EnhancedTournaments() {
                             {/* Navigation Tabs */}
                             <div className="mb-8">
                                 <div className="flex space-x-1 bg-white dark:bg-gray-800 p-1 rounded-lg shadow-sm">
-                                    {(['tournaments', 'calendar', 'deck-builder', 'practice'] as const).map((tab) => (
+                                    {(['tournaments', 'deck-builder', 'practice'] as const).map((tab) => (
                                         <button
                                             key={tab}
                                             onClick={() => setActiveTab(tab)}
@@ -375,7 +375,6 @@ export default function EnhancedTournaments() {
                                                 }`}
                                         >
                                             {tab === 'tournaments' && '🏆 Tournaments'}
-                                            {tab === 'calendar' && '📅 Calendar'}
                                             {tab === 'deck-builder' && '⚡ Deck Builder'}
                                             {tab === 'practice' && '🎯 Practice'}
                                         </button>
@@ -440,10 +439,6 @@ export default function EnhancedTournaments() {
                                     generatePracticeRecommendations={generatePracticeRecommendations}
                                     formatComboName={formatComboName}
                                 />
-                            )}
-
-                            {activeTab === 'calendar' && (
-                                <CalendarTab />
                             )}
                         </div>
                     </div>
@@ -1017,23 +1012,6 @@ function PracticeTab({
                     </div>
                 </div>
             )}
-        </div>
-    )
-}
-
-function CalendarTab() {
-    return (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                    Upcoming Tournaments
-                </h3>
-            </div>
-
-            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                <p>No upcoming tournaments scheduled.</p>
-                <p className="text-sm mt-2">Check back later for tournament announcements!</p>
-            </div>
         </div>
     )
 }
