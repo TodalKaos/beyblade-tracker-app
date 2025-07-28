@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import Image from 'next/image'
 import type { BeybladePartDB, PartType } from '@/types/beyblade'
 import { searchMasterParts, MASTER_PARTS } from '@/data/masterParts'
 
@@ -185,9 +186,11 @@ export default function AutocompleteInput({
                         >
                             {/* Part Image */}
                             <div className="flex-shrink-0">
-                                <img
+                                <Image
                                     src={suggestion.image || '/images/parts/placeholder.svg'}
                                     alt={suggestion.name}
+                                    width={40}
+                                    height={40}
                                     className="w-10 h-10 rounded-md object-cover bg-gray-100 dark:bg-gray-700"
                                     onError={(e) => {
                                         const target = e.target as HTMLImageElement

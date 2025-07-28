@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import Image from 'next/image'
 import { getAllParts, getCollectionStats, addPart, updatePart, deletePart, searchParts } from '@/services/database'
 import type { BeybladePartDB, BeybladePartCreate, PartType } from '@/types/beyblade'
 import Navigation from '@/components/Navigation'
@@ -584,9 +585,11 @@ export default function Collection() {
                                                 <div key={part.id} className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                                                     {/* Part Image */}
                                                     <div className="flex-shrink-0">
-                                                        <img
+                                                        <Image
                                                             src={getPartImage(part.name, part.type)}
                                                             alt={part.name}
+                                                            width={64}
+                                                            height={64}
                                                             className="w-16 h-16 rounded-lg object-cover bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600"
                                                             onError={(e) => {
                                                                 const target = e.target as HTMLImageElement

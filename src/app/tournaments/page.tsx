@@ -60,9 +60,6 @@ export default function EnhancedTournaments() {
                     topComboPoints: 0
                 }
             )
-
-            // Generate deck recommendations
-            generateDeckRecommendations()
         } catch (error) {
             console.error('Error loading data:', error)
         } finally {
@@ -75,7 +72,7 @@ export default function EnhancedTournaments() {
     }, [loadData])
 
     // AI Deck Builder Logic
-    const generateDeckRecommendations = async () => {
+    const generateDeckRecommendations = useCallback(async () => {
         try {
             // Get combo performance stats
             const comboStats = await getComboTestStats()
@@ -93,7 +90,7 @@ export default function EnhancedTournaments() {
 
             // Strategy: Prioritize combos with battle data, then fall back to tournament performance
             const combosWithBattleData = comboStats.filter(stat => stat.total_battles >= 2)
-            
+
             if (combosWithBattleData.length >= 3) {
                 // Use battle-tested combos with highest composite score
                 const scoredCombos = combosWithBattleData.map(stat => ({
@@ -102,22 +99,22 @@ export default function EnhancedTournaments() {
                     winRate: stat.win_rate,
                     avgPoints: stat.average_points_scored
                 }))
-                
+
                 bestDeck = scoredCombos
                     .sort((a, b) => b.score - a.score)
                     .slice(0, 3)
                     .map(item => item.combo)
-                
+
                 confidenceScore = 90
                 reasons = [
                     'Battle-tested performance data',
                     'Optimized composite scoring',
                     'Proven tournament viability'
                 ]
-                
+
                 const avgWinRate = scoredCombos.slice(0, 3).reduce((sum, item) => sum + item.winRate, 0) / 3
                 const avgPointsScored = scoredCombos.slice(0, 3).reduce((sum, item) => sum + item.avgPoints, 0) / 3
-                
+
                 expectedPerformance = {
                     win_rate: avgWinRate,
                     avg_points: avgPointsScored
@@ -132,7 +129,7 @@ export default function EnhancedTournaments() {
                     }))
                     .sort((a, b) => b.score - a.score)
                     .slice(0, 3)
-                
+
                 if (tournamentCombos.length >= 3) {
                     bestDeck = tournamentCombos.map(item => item.combo)
                     confidenceScore = 65
@@ -173,7 +170,14 @@ export default function EnhancedTournaments() {
         } catch (error) {
             console.error('Error generating deck recommendations:', error)
         }
-    }
+    }, [combos])
+
+    // Separate effect for generating deck recommendations
+    useEffect(() => {
+        if (!loading) {
+            generateDeckRecommendations()
+        }
+    }, [combos, loading, generateDeckRecommendations])
 
     const generatePracticeRecommendations = () => {
         if (!selectedDeck.length) return []
@@ -609,13 +613,12 @@ function DeckBuilderTab({
                                             Optimal Tournament Deck
                                         </h4>
                                         <div className="flex items-center gap-2 mt-1">
-                                            <div className={`px-2 py-1 rounded text-sm ${
-                                                rec.confidence_score >= 80 
+                                            <div className={`px-2 py-1 rounded text-sm ${rec.confidence_score >= 80
                                                     ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300'
                                                     : rec.confidence_score >= 60
-                                                    ? 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300'
-                                                    : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300'
-                                            }`}>
+                                                        ? 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300'
+                                                        : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300'
+                                                }`}>
                                                 {rec.confidence_score}% Confidence
                                             </div>
                                             <div className="text-sm text-gray-600 dark:text-gray-400">
