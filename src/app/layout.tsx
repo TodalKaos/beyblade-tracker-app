@@ -110,6 +110,25 @@ export default function RootLayout({
                     navigator.serviceWorker.register('/sw.js')
                       .then(function(registration) {
                         console.log('SW registered: ', registration);
+                        
+                        // Check for updates every 60 seconds
+                        setInterval(() => {
+                          registration.update();
+                        }, 60000);
+                        
+                        // Handle updates
+                        registration.addEventListener('updatefound', () => {
+                          const newWorker = registration.installing;
+                          if (newWorker) {
+                            console.log('SW update found');
+                            newWorker.addEventListener('statechange', () => {
+                              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                console.log('SW update ready');
+                                // The PWAManager component will handle the UI for this
+                              }
+                            });
+                          }
+                        });
                       })
                       .catch(function(registrationError) {
                         console.log('SW registration failed: ', registrationError);

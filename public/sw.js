@@ -1,9 +1,10 @@
-const CACHE_NAME = 'beyblade-tracker-v1.0.0';
+const CACHE_NAME = 'beyblade-tracker-v1.1.0';
 const STATIC_CACHE_URLS = [
     '/',
     '/collection',
     '/combos',
     '/tournaments',
+    '/testing',
     '/manifest.json',
     // Add critical CSS and JS files
     '/_next/static/css/app/layout.css',
@@ -43,6 +44,14 @@ self.addEventListener('install', (event) => {
     );
 });
 
+// Handle messages from the main thread
+self.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+        console.log('Service Worker: Received SKIP_WAITING message');
+        self.skipWaiting();
+    }
+});
+
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
     console.log('Service Worker: Activating');
@@ -58,6 +67,17 @@ self.addEventListener('activate', (event) => {
             );
         }).then(() => {
             console.log('Service Worker: Activated');
+            
+            // Notify all clients that the service worker has been updated
+            return self.clients.matchAll().then((clients) => {
+                clients.forEach((client) => {
+                    client.postMessage({
+                        type: 'SW_UPDATED',
+                        message: 'Service Worker has been updated'
+                    });
+                });
+            });
+        }).then(() => {
             return self.clients.claim(); // Take control of all pages
         })
     );

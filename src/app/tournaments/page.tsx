@@ -614,10 +614,10 @@ function DeckBuilderTab({
                                         </h4>
                                         <div className="flex items-center gap-2 mt-1">
                                             <div className={`px-2 py-1 rounded text-sm ${rec.confidence_score >= 80
-                                                    ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300'
-                                                    : rec.confidence_score >= 60
-                                                        ? 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300'
-                                                        : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300'
+                                                ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300'
+                                                : rec.confidence_score >= 60
+                                                    ? 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300'
+                                                    : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300'
                                                 }`}>
                                                 {rec.confidence_score}% Confidence
                                             </div>
