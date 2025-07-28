@@ -67,7 +67,7 @@ self.addEventListener('activate', (event) => {
             );
         }).then(() => {
             console.log('Service Worker: Activated');
-            
+
             // Notify all clients that the service worker has been updated
             return self.clients.matchAll().then((clients) => {
                 clients.forEach((client) => {

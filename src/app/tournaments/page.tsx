@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import Navigation from '@/components/Navigation'
 import Footer from '@/components/Footer'
 import ProtectedRoute from '@/components/ProtectedRoute'
-import { getAllTournaments, getTournamentStats, addTournament, deleteTournament, getAllCombos, getComboTestStats } from '@/services/database'
+import { getAllTournaments, getTournamentStats, addTournament, updateTournament, deleteTournament, getAllCombos, getComboTestStats } from '@/services/database'
 import type { TournamentWithCombos, TournamentCreate, ComboWithParts, DeckRecommendation } from '@/types/beyblade'
 
 export default function EnhancedTournaments() {
@@ -21,6 +21,8 @@ export default function EnhancedTournaments() {
     // UI State
     const [activeTab, setActiveTab] = useState<'tournaments' | 'calendar' | 'deck-builder' | 'practice'>('tournaments')
     const [showAddForm, setShowAddForm] = useState(false)
+    const [showEditForm, setShowEditForm] = useState(false)
+    const [editingTournament, setEditingTournament] = useState<TournamentWithCombos | null>(null)
 
     // Deck Builder State
     const [deckRecommendations, setDeckRecommendations] = useState<DeckRecommendation[]>([])
@@ -254,6 +256,73 @@ export default function EnhancedTournaments() {
         }
     }
 
+    const handleEditTournament = (tournament: TournamentWithCombos) => {
+        setEditingTournament(tournament)
+        setNewTournament({
+            name: tournament.name,
+            location: tournament.location || '',
+            tournament_date: tournament.tournament_date,
+            combo1_id: tournament.combo1_id,
+            combo2_id: tournament.combo2_id,
+            combo3_id: tournament.combo3_id,
+            combo1_points: tournament.combo1_points,
+            combo2_points: tournament.combo2_points,
+            combo3_points: tournament.combo3_points,
+            placement: tournament.placement,
+            total_players: tournament.total_players,
+            notes: tournament.notes || ''
+        })
+        setShowEditForm(true)
+        setShowAddForm(false) // Close add form if open
+    }
+
+    const handleUpdateTournament = async (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!editingTournament) return
+
+        try {
+            await updateTournament(editingTournament.id, newTournament)
+            setNewTournament({
+                name: '',
+                location: '',
+                tournament_date: new Date().toISOString().split('T')[0],
+                combo1_id: null,
+                combo2_id: null,
+                combo3_id: null,
+                combo1_points: 0,
+                combo2_points: 0,
+                combo3_points: 0,
+                placement: undefined,
+                total_players: undefined,
+                notes: ''
+            })
+            setShowEditForm(false)
+            setEditingTournament(null)
+            loadData()
+        } catch (error) {
+            console.error('Error updating tournament:', error)
+        }
+    }
+
+    const handleCancelEdit = () => {
+        setShowEditForm(false)
+        setEditingTournament(null)
+        setNewTournament({
+            name: '',
+            location: '',
+            tournament_date: new Date().toISOString().split('T')[0],
+            combo1_id: null,
+            combo2_id: null,
+            combo3_id: null,
+            combo1_points: 0,
+            combo2_points: 0,
+            combo3_points: 0,
+            placement: undefined,
+            total_players: undefined,
+            notes: ''
+        })
+    }
+
     const formatComboName = (combo: ComboWithParts | null | undefined): string => {
         if (!combo) return 'No combo selected'
 
@@ -341,10 +410,17 @@ export default function EnhancedTournaments() {
                                     combos={combos}
                                     showAddForm={showAddForm}
                                     setShowAddForm={setShowAddForm}
+                                    showEditForm={showEditForm}
+                                    setShowEditForm={setShowEditForm}
                                     newTournament={newTournament}
                                     setNewTournament={setNewTournament}
                                     handleAddTournament={handleAddTournament}
+                                    handleEditTournament={handleEditTournament}
+                                    handleUpdateTournament={handleUpdateTournament}
                                     handleDeleteTournament={handleDeleteTournament}
+                                    handleCancelEdit={handleCancelEdit}
+                                    editingTournament={editingTournament}
+                                    setEditingTournament={setEditingTournament}
                                     formatComboName={formatComboName}
                                 />
                             )}
@@ -384,20 +460,34 @@ function TournamentsTab({
     combos,
     showAddForm,
     setShowAddForm,
+    showEditForm,
+    setShowEditForm,
     newTournament,
     setNewTournament,
     handleAddTournament,
+    handleEditTournament,
+    handleUpdateTournament,
     handleDeleteTournament,
+    handleCancelEdit,
+    editingTournament,
+    setEditingTournament,
     formatComboName
 }: {
     tournaments: TournamentWithCombos[]
     combos: ComboWithParts[]
     showAddForm: boolean
     setShowAddForm: (show: boolean) => void
+    showEditForm: boolean
+    setShowEditForm: React.Dispatch<React.SetStateAction<boolean>>
     newTournament: TournamentCreate
     setNewTournament: React.Dispatch<React.SetStateAction<TournamentCreate>>
     handleAddTournament: (e: React.FormEvent) => Promise<void>
+    handleEditTournament: (tournament: TournamentWithCombos) => void
+    handleUpdateTournament: (e: React.FormEvent) => Promise<void>
     handleDeleteTournament: (tournamentId: number) => Promise<void>
+    handleCancelEdit: () => void
+    editingTournament: TournamentWithCombos | null
+    setEditingTournament: React.Dispatch<React.SetStateAction<TournamentWithCombos | null>>
     formatComboName: (combo: ComboWithParts | null | undefined) => string
 }) {
     return (
@@ -405,7 +495,29 @@ function TournamentsTab({
             {/* Add Tournament Button */}
             <div className="mb-6">
                 <button
-                    onClick={() => setShowAddForm(true)}
+                    onClick={() => {
+                        setShowAddForm(true)
+                        // Close edit form if open
+                        if (showEditForm) {
+                            setShowEditForm(false)
+                            setEditingTournament(null)
+                            // Reset form
+                            setNewTournament({
+                                name: '',
+                                location: '',
+                                tournament_date: new Date().toISOString().split('T')[0],
+                                combo1_id: null,
+                                combo2_id: null,
+                                combo3_id: null,
+                                combo1_points: 0,
+                                combo2_points: 0,
+                                combo3_points: 0,
+                                placement: undefined,
+                                total_players: undefined,
+                                notes: ''
+                            })
+                        }
+                    }}
                     className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
                 >
                     <span>+</span>
@@ -512,6 +624,147 @@ function TournamentsTab({
                 </div>
             )}
 
+            {/* Edit Tournament Form */}
+            {showEditForm && editingTournament && (
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 mb-8">
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Edit Tournament</h3>
+                    <form onSubmit={handleUpdateTournament} className="space-y-4">
+                        <div className="grid md:grid-cols-3 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Tournament Name
+                                </label>
+                                <input
+                                    type="text"
+                                    value={newTournament.name}
+                                    onChange={(e) => setNewTournament({ ...newTournament, name: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Location (Optional)
+                                </label>
+                                <input
+                                    type="text"
+                                    value={newTournament.location || ''}
+                                    onChange={(e) => setNewTournament({ ...newTournament, location: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Date
+                                </label>
+                                <input
+                                    type="date"
+                                    value={newTournament.tournament_date}
+                                    onChange={(e) => setNewTournament({ ...newTournament, tournament_date: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Placement (Optional)
+                                </label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    placeholder="Final placement"
+                                    value={newTournament.placement || ''}
+                                    onChange={(e) => setNewTournament({ ...newTournament, placement: e.target.value ? parseInt(e.target.value) : undefined })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Total Players (Optional)
+                                </label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    placeholder="Total tournament players"
+                                    value={newTournament.total_players || ''}
+                                    onChange={(e) => setNewTournament({ ...newTournament, total_players: e.target.value ? parseInt(e.target.value) : undefined })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Deck Selection */}
+                        <div className="grid md:grid-cols-3 gap-4">
+                            {[1, 2, 3].map((comboNum) => (
+                                <div key={comboNum} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+                                    <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Combo {comboNum}</h4>
+                                    <div className="space-y-2">
+                                        <select
+                                            value={newTournament[`combo${comboNum}_id` as keyof TournamentCreate] as number || ''}
+                                            onChange={(e) => setNewTournament({
+                                                ...newTournament,
+                                                [`combo${comboNum}_id`]: e.target.value ? parseInt(e.target.value) : null
+                                            })}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        >
+                                            <option value="">Select combo...</option>
+                                            {combos.map((combo: ComboWithParts) => (
+                                                <option key={combo.id} value={combo.id}>
+                                                    {formatComboName(combo)}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            placeholder="Points earned"
+                                            value={newTournament[`combo${comboNum}_points` as keyof TournamentCreate] as number || ''}
+                                            onChange={(e) => setNewTournament({
+                                                ...newTournament,
+                                                [`combo${comboNum}_points`]: parseInt(e.target.value) || 0
+                                            })}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Notes (Optional)
+                            </label>
+                            <textarea
+                                value={newTournament.notes || ''}
+                                onChange={(e) => setNewTournament({ ...newTournament, notes: e.target.value })}
+                                placeholder="Any additional notes about this tournament..."
+                                rows={3}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                            />
+                        </div>
+
+                        <div className="flex gap-2">
+                            <button
+                                type="submit"
+                                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                            >
+                                Update Tournament
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleCancelEdit}
+                                className="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            )}
+
             {/* Tournaments List */}
             <div className="space-y-4">
                 {tournaments.length === 0 ? (
@@ -538,13 +791,22 @@ function TournamentsTab({
                                         {tournament.total_points} points total
                                     </p>
                                 </div>
-                                <button
-                                    onClick={() => handleDeleteTournament(tournament.id)}
-                                    className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
-                                    title="Delete Tournament"
-                                >
-                                    🗑️ Delete
-                                </button>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => handleEditTournament(tournament)}
+                                        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+                                        title="Edit Tournament"
+                                    >
+                                        ✏️ Edit
+                                    </button>
+                                    <button
+                                        onClick={() => handleDeleteTournament(tournament.id)}
+                                        className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+                                        title="Delete Tournament"
+                                    >
+                                        🗑️ Delete
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="grid md:grid-cols-3 gap-4">
