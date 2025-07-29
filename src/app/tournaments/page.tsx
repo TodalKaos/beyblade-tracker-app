@@ -4,8 +4,8 @@ import { useState, useEffect, useCallback } from 'react'
 import Navigation from '@/components/Navigation'
 import Footer from '@/components/Footer'
 import ProtectedRoute from '@/components/ProtectedRoute'
-import { getAllTournaments, getTournamentStats, addTournament, updateTournament, deleteTournament, getAllCombos, getComboTestStats } from '@/services/database'
-import type { TournamentWithCombos, TournamentCreate, ComboWithParts, DeckRecommendation } from '@/types/beyblade'
+import { getAllTournaments, getTournamentStats, addTournament, updateTournament, deleteTournament, getAllCombos, getComboTestStats, addTournamentRound, getTournamentRounds, deleteTournamentRound } from '@/services/database'
+import type { TournamentWithCombos, TournamentCreate, ComboWithParts, DeckRecommendation, FinishType } from '@/types/beyblade'
 
 export default function EnhancedTournaments() {
     const [tournaments, setTournaments] = useState<TournamentWithCombos[]>([])
@@ -23,6 +23,8 @@ export default function EnhancedTournaments() {
     const [showAddForm, setShowAddForm] = useState(false)
     const [showEditForm, setShowEditForm] = useState(false)
     const [editingTournament, setEditingTournament] = useState<TournamentWithCombos | null>(null)
+    const [showRoundTracker, setShowRoundTracker] = useState(false)
+    const [activeTournament, setActiveTournament] = useState<TournamentWithCombos | null>(null)
 
     // Deck Builder State
     const [deckRecommendations, setDeckRecommendations] = useState<DeckRecommendation[]>([])
@@ -323,6 +325,22 @@ export default function EnhancedTournaments() {
         })
     }
 
+    const handleStartRoundTracker = (tournament: TournamentWithCombos) => {
+        setActiveTournament(tournament)
+        setShowRoundTracker(true)
+        // Close any open forms
+        setShowAddForm(false)
+        setShowEditForm(false)
+        setEditingTournament(null)
+    }
+
+    const handleCloseRoundTracker = () => {
+        setShowRoundTracker(false)
+        setActiveTournament(null)
+        // Reload data to refresh any updates
+        loadData()
+    }
+
     const formatComboName = (combo: ComboWithParts | null | undefined): string => {
         if (!combo) return 'No combo selected'
 
@@ -403,7 +421,7 @@ export default function EnhancedTournaments() {
                             </div>
 
                             {/* Tab Content */}
-                            {activeTab === 'tournaments' && (
+                            {activeTab === 'tournaments' && !showRoundTracker && (
                                 <TournamentsTab
                                     tournaments={tournaments}
                                     combos={combos}
@@ -418,6 +436,7 @@ export default function EnhancedTournaments() {
                                     handleUpdateTournament={handleUpdateTournament}
                                     handleDeleteTournament={handleDeleteTournament}
                                     handleCancelEdit={handleCancelEdit}
+                                    handleStartRoundTracker={handleStartRoundTracker}
                                     editingTournament={editingTournament}
                                     setEditingTournament={setEditingTournament}
                                     formatComboName={formatComboName}
@@ -437,6 +456,16 @@ export default function EnhancedTournaments() {
                                 <PracticeTab
                                     selectedDeck={selectedDeck}
                                     generatePracticeRecommendations={generatePracticeRecommendations}
+                                    formatComboName={formatComboName}
+                                />
+                            )}
+
+                            {/* Round Tracker Modal/Overlay */}
+                            {showRoundTracker && activeTournament && (
+                                <RoundTracker
+                                    tournament={activeTournament}
+                                    combos={combos}
+                                    onClose={handleCloseRoundTracker}
                                     formatComboName={formatComboName}
                                 />
                             )}
@@ -464,6 +493,7 @@ function TournamentsTab({
     handleUpdateTournament,
     handleDeleteTournament,
     handleCancelEdit,
+    handleStartRoundTracker,
     editingTournament,
     setEditingTournament,
     formatComboName
@@ -481,6 +511,7 @@ function TournamentsTab({
     handleUpdateTournament: (e: React.FormEvent) => Promise<void>
     handleDeleteTournament: (tournamentId: number) => Promise<void>
     handleCancelEdit: () => void
+    handleStartRoundTracker: (tournament: TournamentWithCombos) => void
     editingTournament: TournamentWithCombos | null
     setEditingTournament: React.Dispatch<React.SetStateAction<TournamentWithCombos | null>>
     formatComboName: (combo: ComboWithParts | null | undefined) => string
@@ -788,6 +819,13 @@ function TournamentsTab({
                                 </div>
                                 <div className="flex gap-2">
                                     <button
+                                        onClick={() => handleStartRoundTracker(tournament)}
+                                        className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+                                        title="Track Rounds Live"
+                                    >
+                                        📊 Track Rounds
+                                    </button>
+                                    <button
                                         onClick={() => handleEditTournament(tournament)}
                                         className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
                                         title="Edit Tournament"
@@ -1012,6 +1050,309 @@ function PracticeTab({
                     </div>
                 </div>
             )}
+        </div>
+    )
+}
+
+// Round Tracker Component for Live Tournament Tracking
+function RoundTracker({
+    tournament,
+    combos,
+    onClose,
+    formatComboName
+}: {
+    tournament: TournamentWithCombos
+    combos: ComboWithParts[]
+    onClose: () => void
+    formatComboName: (combo: ComboWithParts | null | undefined) => string
+}) {
+    const [rounds, setRounds] = useState<Array<{
+        id: string
+        combo_number: number
+        finish_type: FinishType
+        points: number
+        created_at: string
+    }>>([])
+    const [loading, setLoading] = useState(true)
+    const [updating, setUpdating] = useState(false)
+
+    // Get the tournament combos
+    const tournamentCombos = [
+        tournament.combo1,
+        tournament.combo2,
+        tournament.combo3
+    ].filter(combo => combo !== null)
+
+    // Load existing rounds when component mounts
+    useEffect(() => {
+        const loadRounds = async () => {
+            try {
+                const data = await getTournamentRounds(tournament.id.toString())
+                setRounds(data)
+            } catch (error) {
+                console.error('Error loading tournament rounds:', error)
+            } finally {
+                setLoading(false)
+            }
+        }
+        loadRounds()
+    }, [tournament.id])
+
+    const handleAddPoints = async (comboNumber: number, finishType: FinishType) => {
+        if (updating) return
+
+        setUpdating(true)
+        try {
+            await addTournamentRound(tournament.id.toString(), comboNumber, finishType)
+            // Reload rounds to get the updated list
+            const updatedRounds = await getTournamentRounds(tournament.id.toString())
+            setRounds(updatedRounds)
+        } catch (error) {
+            console.error('Error adding tournament round:', error)
+        } finally {
+            setUpdating(false)
+        }
+    }
+
+    const handleDeleteRound = async (roundId: string) => {
+        if (updating) return
+
+        setUpdating(true)
+        try {
+            await deleteTournamentRound(roundId, tournament.id.toString())
+            // Reload rounds to get the updated list
+            const updatedRounds = await getTournamentRounds(tournament.id.toString())
+            setRounds(updatedRounds)
+        } catch (error) {
+            console.error('Error deleting tournament round:', error)
+        } finally {
+            setUpdating(false)
+        }
+    }
+
+    const getTotalPoints = () => {
+        return rounds.reduce((total, round) => total + round.points, 0)
+    }
+
+    const getComboTotalPoints = (comboNumber: number) => {
+        return rounds
+            .filter(round => round.combo_number === comboNumber)
+            .reduce((total, round) => total + round.points, 0)
+    }
+
+    const getComboRounds = (comboNumber: number) => {
+        return rounds.filter(round => round.combo_number === comboNumber)
+    }
+
+    const getFinishTypeColor = (finishType: FinishType) => {
+        switch (finishType) {
+            case 'spin': return 'bg-blue-500 hover:bg-blue-600'
+            case 'over': return 'bg-green-500 hover:bg-green-600'
+            case 'burst': return 'bg-red-500 hover:bg-red-600'
+            case 'xtreme': return 'bg-purple-500 hover:bg-purple-600'
+            default: return 'bg-gray-500 hover:bg-gray-600'
+        }
+    }
+
+    const getFinishTypePoints = (finishType: FinishType) => {
+        switch (finishType) {
+            case 'spin': return 1
+            case 'over': return 2
+            case 'burst': return 2
+            case 'xtreme': return 3
+            default: return 0
+        }
+    }
+
+    if (loading) {
+        return (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-8">
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+                        <p className="text-gray-600 dark:text-gray-300">Loading tournament rounds...</p>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="p-6">
+                    {/* Header */}
+                    <div className="flex justify-between items-center mb-6">
+                        <div>
+                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                                📊 Live Tournament Tracker
+                            </h2>
+                            <p className="text-gray-600 dark:text-gray-300">
+                                {tournament.name} • {new Date(tournament.tournament_date).toLocaleDateString()}
+                            </p>
+                        </div>
+                        <button
+                            onClick={onClose}
+                            className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors"
+                        >
+                            ✕ Close
+                        </button>
+                    </div>
+
+                    {/* Tournament Summary */}
+                    <div className="grid md:grid-cols-4 gap-4 mb-6">
+                        <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg text-center">
+                            <h3 className="font-semibold text-blue-900 dark:text-blue-300">Total Rounds</h3>
+                            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{rounds.length}</p>
+                        </div>
+                        <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg text-center">
+                            <h3 className="font-semibold text-green-900 dark:text-green-300">Total Points</h3>
+                            <p className="text-2xl font-bold text-green-600 dark:text-green-400">{getTotalPoints()}</p>
+                        </div>
+                        <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg text-center">
+                            <h3 className="font-semibold text-purple-900 dark:text-purple-300">Best Finish</h3>
+                            <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                                {rounds.length > 0 ? Math.max(...rounds.map(r => r.points)) : 0}
+                            </p>
+                        </div>
+                        <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg text-center">
+                            <h3 className="font-semibold text-orange-900 dark:text-orange-300">Avg/Round</h3>
+                            <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                                {rounds.length > 0 ? (getTotalPoints() / rounds.length).toFixed(1) : '0.0'}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Quick Entry Grid */}
+                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                        {tournamentCombos.map((combo, index) => {
+                            const comboNumber = index + 1
+                            const comboRounds = getComboRounds(comboNumber)
+
+                            return (
+                                <div key={index} className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
+                                    <div className="text-center mb-4">
+                                        <h4 className="font-bold text-lg text-gray-900 dark:text-white mb-1">
+                                            Combo {comboNumber}
+                                        </h4>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                                            {formatComboName(combo)}
+                                        </p>
+                                        <div className="bg-white dark:bg-gray-600 rounded-lg p-2">
+                                            <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                                                {getComboTotalPoints(comboNumber)} pts
+                                            </p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                {comboRounds.length} rounds
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Quick Entry Buttons */}
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {(['spin', 'over', 'burst', 'xtreme'] as FinishType[]).map((finishType) => (
+                                            <button
+                                                key={finishType}
+                                                onClick={() => handleAddPoints(comboNumber, finishType)}
+                                                disabled={updating}
+                                                className={`${getFinishTypeColor(finishType)} text-white font-semibold py-2 px-3 rounded-lg transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed`}
+                                            >
+                                                {finishType.charAt(0).toUpperCase() + finishType.slice(1)}
+                                                <br />
+                                                <span className="text-xs">+{getFinishTypePoints(finishType)} pt{getFinishTypePoints(finishType) > 1 ? 's' : ''}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {/* Recent Rounds for this combo */}
+                                    {comboRounds.length > 0 && (
+                                        <div className="mt-3 space-y-1">
+                                            <p className="text-xs font-medium text-gray-700 dark:text-gray-300">Recent:</p>
+                                            {comboRounds.slice(0, 3).map((round, idx) => (
+                                                <div key={idx} className="flex justify-between items-center text-xs bg-white dark:bg-gray-600 rounded px-2 py-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="capitalize text-gray-600 dark:text-gray-400">
+                                                            {round.finish_type}
+                                                        </span>
+                                                        <span className="text-green-600 dark:text-green-400 font-medium">
+                                                            +{round.points}
+                                                        </span>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => handleDeleteRound(round.id)}
+                                                        disabled={updating}
+                                                        className="text-red-500 hover:text-red-700 disabled:text-red-300 ml-1 p-0.5 rounded"
+                                                        title="Delete this round"
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )
+                        })}
+                    </div>
+
+                    {/* Complete Rounds History */}
+                    {rounds.length > 0 && (
+                        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600">
+                            <div className="p-4 border-b border-gray-200 dark:border-gray-600">
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                    Complete Round History ({rounds.length} rounds)
+                                </h3>
+                            </div>
+                            <div className="p-4 max-h-64 overflow-y-auto">
+                                <div className="space-y-2">
+                                    {rounds.map((round, index) => (
+                                        <div key={round.id} className="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                                            <div className="flex items-center gap-4">
+                                                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                                    #{rounds.length - index}
+                                                </span>
+                                                <span className="font-semibold text-gray-900 dark:text-white">
+                                                    Combo {round.combo_number}
+                                                </span>
+                                                <span className={`px-2 py-1 rounded text-xs font-medium text-white ${getFinishTypeColor(round.finish_type).split(' ')[0]}`}>
+                                                    {round.finish_type.charAt(0).toUpperCase() + round.finish_type.slice(1)}
+                                                </span>
+                                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                    {new Date(round.created_at).toLocaleTimeString()}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-bold text-green-600 dark:text-green-400">
+                                                    +{round.points} pt{round.points > 1 ? 's' : ''}
+                                                </span>
+                                                <button
+                                                    onClick={() => handleDeleteRound(round.id)}
+                                                    disabled={updating}
+                                                    className="text-red-500 hover:text-red-700 disabled:text-red-300 p-1 rounded"
+                                                    title="Delete this round"
+                                                >
+                                                    ✕
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {updating && (
+                        <div className="fixed inset-0 bg-black bg-opacity-25 flex items-center justify-center z-10">
+                            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-lg">
+                                <div className="flex items-center gap-3">
+                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-green-600"></div>
+                                    <span className="text-gray-700 dark:text-gray-300">Updating...</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
         </div>
     )
 }

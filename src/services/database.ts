@@ -12,7 +12,8 @@ import type {
     TestBattle,
     TestBattleCreate,
     TestBattleWithCombos,
-    ComboTestStats
+    ComboTestStats,
+    FinishType
 } from '@/types/beyblade'
 
 // Get all parts for the current user
@@ -630,4 +631,149 @@ export async function deleteTestBattle(id: number): Promise<void> {
         console.error('Error deleting test battle:', error)
         throw error
     }
+}
+
+// Tournament Round Functions
+export const addTournamentRound = async (tournamentId: string, comboNumber: number, finishType: FinishType) => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('User not authenticated')
+
+    // Point values based on finish type
+    const pointValues = {
+        spin: 1,
+        over: 2,
+        burst: 2,
+        xtreme: 3
+    }
+
+    const points = pointValues[finishType]
+
+    // Add the round to tournament_rounds table
+    const { error: roundError } = await supabase
+        .from('tournament_rounds')
+        .insert({
+            tournament_id: tournamentId,
+            combo_number: comboNumber,
+            finish_type: finishType,
+            points: points,
+            user_id: user.id
+        })
+
+    if (roundError) {
+        console.error('Error adding tournament round:', roundError)
+        throw roundError
+    }
+
+    // Update the tournament combo points
+    const { data: tournament, error: fetchError } = await supabase
+        .from('tournaments')
+        .select('combo1_points, combo2_points, combo3_points')
+        .eq('id', parseInt(tournamentId))
+        .eq('user_id', user.id)
+        .single()
+
+    if (fetchError) {
+        console.error('Error fetching tournament:', fetchError)
+        throw fetchError
+    }
+
+    // Update the appropriate combo points
+    const pointField = `combo${comboNumber}_points` as keyof typeof tournament
+    const currentPoints = tournament[pointField] || 0
+    const newPoints = currentPoints + points
+
+    const { error: updateError } = await supabase
+        .from('tournaments')
+        .update({ [pointField]: newPoints })
+        .eq('id', parseInt(tournamentId))
+        .eq('user_id', user.id)
+
+    if (updateError) {
+        console.error('Error updating tournament combo points:', updateError)
+        throw updateError
+    }
+
+    // Update combo stats to reflect the new points
+    await updateComboStats()
+}
+
+export const getTournamentRounds = async (tournamentId: string) => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('User not authenticated')
+
+    const { data, error } = await supabase
+        .from('tournament_rounds')
+        .select('*')
+        .eq('tournament_id', parseInt(tournamentId))
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+
+    if (error) {
+        console.error('Error fetching tournament rounds:', error)
+        throw error
+    }
+
+    return data || []
+}
+
+export const deleteTournamentRound = async (roundId: string, tournamentId: string) => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('User not authenticated')
+
+    // First get the round data to know how many points to subtract
+    const { data: round, error: fetchError } = await supabase
+        .from('tournament_rounds')
+        .select('combo_number, points')
+        .eq('id', roundId)
+        .eq('user_id', user.id)
+        .single()
+
+    if (fetchError) {
+        console.error('Error fetching round for deletion:', fetchError)
+        throw fetchError
+    }
+
+    // Delete the round
+    const { error: deleteError } = await supabase
+        .from('tournament_rounds')
+        .delete()
+        .eq('id', roundId)
+        .eq('user_id', user.id)
+
+    if (deleteError) {
+        console.error('Error deleting tournament round:', deleteError)
+        throw deleteError
+    }
+
+    // Update the tournament combo points by subtracting the deleted points
+    const { data: tournament, error: fetchTournamentError } = await supabase
+        .from('tournaments')
+        .select('combo1_points, combo2_points, combo3_points')
+        .eq('id', parseInt(tournamentId))
+        .eq('user_id', user.id)
+        .single()
+
+    if (fetchTournamentError) {
+        console.error('Error fetching tournament for update:', fetchTournamentError)
+        throw fetchTournamentError
+    }
+
+    // Update the appropriate combo points
+    const pointField = `combo${round.combo_number}_points` as keyof typeof tournament
+    const currentPoints = tournament[pointField] || 0
+    const newPoints = Math.max(0, currentPoints - round.points) // Ensure points don't go negative
+
+    const { error: updateError } = await supabase
+        .from('tournaments')
+        .update({ [pointField]: newPoints })
+        .eq('id', parseInt(tournamentId))
+        .eq('user_id', user.id)
+
+    if (updateError) {
+        console.error('Error updating tournament combo points after deletion:', updateError)
+        throw updateError
+    }
+
+    // Update combo stats to reflect the removed points
+    await updateComboStats()
 }
