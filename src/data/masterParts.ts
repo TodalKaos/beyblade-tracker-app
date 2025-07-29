@@ -441,122 +441,144 @@ export const MASTER_PARTS: MasterPart[] = [
 
     // Collaboration Blades
     {
-        name: 'Captain America',
-        type: 'blade', series: 'COLLAB',
+        name: 'Captain America (Dran Sword)',
+        type: 'blade',
+        series: 'COLLAB - MARVEL',
         image: '/images/parts/blades/CaptainAmerica.jpg',
         stats: { attack: 55, defense: 28, stamina: 17, weight: 32.3, burstResistance: 0 }
     },
     {
-        name: 'Darth Vader',
+        name: 'Darth Vader (Knight Lance)',
         type: 'blade',
-        series: 'COLLAB',
+        series: 'COLLAB - STAR WARS',
         image: '/images/parts/blades/DarthVader.jpg',
         stats: { attack: 28, defense: 60, stamina: 12, weight: 30.7, burstResistance: 0 }
     },
     {
-        name: 'General Grievous',
+        name: 'General Grievous (Rhino Horn)',
         type: 'blade',
-        series: 'COLLAB',
+        series: 'COLLAB - STAR WARS',
         image: '/images/parts/blades/GeneralGrievous.jpg',
         stats: { attack: 23, defense: 60, stamina: 17, weight: 31, burstResistance: 0 }
     },
     {
-        name: 'Iron Man',
+        name: 'Iron Man (Knight Shield)',
         type: 'blade',
-        series: 'COLLAB',
+        series: 'COLLAB - MARVEL',
         image: '/images/parts/blades/IronMan.jpg',
         stats: { attack: 17, defense: 55, stamina: 28, weight: 33.6, burstResistance: 0 }
     },
     {
-        name: 'Luke Skywalker',
+        name: 'Luke Skywalker (Knight Shield)',
         type: 'blade',
-        series: 'COLLAB',
+        series: 'COLLAB - STAR WARS',
         image: '/images/parts/blades/LukeSkywalker.jpg',
         stats: { attack: 23, defense: 55, stamina: 22, weight: 31.5, burstResistance: 0 }
     },
     {
-        name: 'Megatron',
+        name: 'Megatron (Hells Scythe)',
         type: 'blade',
-        series: 'COLLAB',
+        series: 'COLLAB - TRANSFORMERS',
         image: '/images/parts/blades/Megatron.jpg',
         stats: { attack: 27, defense: 35, stamina: 38, weight: 31.1, burstResistance: 0 }
     },
     {
-        name: 'Moff Gideon',
+        name: 'Moff Gideon (Hells Scythe)',
         type: 'blade',
-        series: 'COLLAB',
+        series: 'COLLAB - STAR WARS',
         image: '/images/parts/blades/MoffGideon.jpg',
         stats: { attack: 32, defense: 35, stamina: 33, weight: 30.5, burstResistance: 0 }
     },
     {
-        name: 'Obi-Wan Kenobi',
+        name: 'Obi-Wan Kenobi (Knight Lance)',
         type: 'blade',
-        series: 'COLLAB',
+        series: 'COLLAB - STAR WARS',
         image: '/images/parts/blades/ObiWanKenobi.jpg',
         stats: { attack: 23, defense: 60, stamina: 17, weight: 30.6, burstResistance: 0 }
     },
     {
-        name: 'Optimus Primal',
+        name: 'Optimus Primal (Shark Edge)',
         type: 'blade',
-        series: 'COLLAB',
+        series: 'COLLAB - TRANSFORMERS',
         image: '/images/parts/blades/OptimusPrimal.jpg',
         stats: { attack: 60, defense: 27, stamina: 13, weight: 35.7, burstResistance: 0 }
     },
     {
-        name: 'Optimus Prime',
+        name: 'Optimus Prime (Knight Shield)',
         type: 'blade',
-        series: 'COLLAB',
+        series: 'COLLAB - TRANSFORMERS',
         image: '/images/parts/blades/OptimusPrime.jpg',
         stats: { attack: 22, defense: 55, stamina: 23, weight: 33.3, burstResistance: 0 }
     },
     {
-        name: 'Red Hulk',
+        name: 'Red Hulk (Tyranno Beat)',
         type: 'blade',
-        series: 'COLLAB',
+        series: 'COLLAB - MARVEL',
         image: '/images/parts/blades/RedHulk.jpg',
         stats: { attack: 65, defense: 27, stamina: 8, weight: 36.5, burstResistance: 0 }
     },
     {
-        name: 'Spider-Man',
+        name: 'Spider-Man (Viper Tail)',
         type: 'blade',
-        series: 'COLLAB',
+        series: 'COLLAB - MARVEL',
         image: '/images/parts/blades/SpiderMan.jpg',
         stats: { attack: 33, defense: 17, stamina: 50, weight: 33.2, burstResistance: 0 }
     },
     {
-        name: 'Starscream',
+        name: 'Starscream (Wizard Arrow)',
         type: 'blade',
-        series: 'COLLAB',
+        series: 'COLLAB - TRANSFORMERS',
         image: '/images/parts/blades/Starscream.jpg',
         stats: { attack: 18, defense: 27, stamina: 55, weight: 29.5, burstResistance: 0 }
     },
     {
-        name: 'Thanos',
+        name: 'Thanos (Knight Lance)',
         type: 'blade',
-        series: 'COLLAB',
+        series: 'COLLAB - MARVEL',
         image: '/images/parts/blades/Thanos.jpg',
         stats: { attack: 22, defense: 60, stamina: 18, weight: 29.5, burstResistance: 0 }
     },
     {
-        name: 'The Mandalorian',
+        name: 'The Mandalorian (Leon Claw)',
         type: 'blade',
-        series: 'COLLAB',
+        series: 'COLLAB - STAR WARS',
         image: '/images/parts/blades/TheMandalorian.jpg',
         stats: { attack: 40, defense: 43, stamina: 17, weight: 30.3, burstResistance: 0 }
     },
     {
-        name: 'Mosasaurus',
+        name: 'Mosasaurus (Cowl Sphinx)',
         type: 'blade',
-        series: 'COLLAB',
+        series: 'COLLAB - JURASSIC WORLD',
         image: '/images/parts/blades/Mosasaurus.png',
         stats: { attack: 32, defense: 55, stamina: 13, weight: 29.9, burstResistance: 0 }
     },
     {
-        name: 'Venom',
+        name: 'Venom (Sword Dran)',
         type: 'blade',
-        series: 'COLLAB',
+        series: 'COLLAB - MARVEL',
         image: '/images/parts/blades/Venom.jpg',
         stats: { attack: 55, defense: 22, stamina: 23, weight: 34.3, burstResistance: 0 }
+    },
+    {
+        name: 'T. Rex (Tyranno Beat)',
+        type: 'blade',
+        series: 'COLLAB - JURASSIC WORLD',
+        image: '/images/parts/blades/TRex.png',
+        stats: { attack: 65, defense: 30, stamina: 5, weight: 37.0, burstResistance: 0 }
+    },
+    {
+        name: 'Quetzalcoatlus (Talon Ptera)',
+        type: 'blade',
+        series: 'COLLAB - JURASSIC WORLD',
+        image: '/images/parts/blades/Quetzalcoatlus.png',
+        stats: { attack: 27, defense: 23, stamina: 50, weight: 34.3, burstResistance: 0 }
+    },
+    {
+        name: 'Spinosaurus (Roar Tyranno)',
+        type: 'blade',
+        series: 'COLLAB - JURASSIC WORLD',
+        image: '/images/parts/blades/Spinosaurus.png',
+        stats: { attack: 60, defense: 28, stamina: 12, weight: 36.0, burstResistance: 0 }
     },
 
 
