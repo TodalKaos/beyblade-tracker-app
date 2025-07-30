@@ -8,7 +8,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "generate-icons": "node scripts/generate-icons.js"
+    "generate-icons": "node scripts/generate-icons.js",
+    "update-sw": "node scripts/update-sw-cache.js",
+    "prebuild": "npm run update-sw"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.52.0",
