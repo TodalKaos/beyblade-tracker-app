@@ -650,22 +650,32 @@ export default function Testing() {
         try {
             setSaving(true)
 
+            // For rounds mode (Best of X), use series wins instead of current round scores
+            let finalScore1, finalScore2
+            if (battleMode === 'rounds') {
+                finalScore1 = combo1Rounds
+                finalScore2 = combo2Rounds
+            } else {
+                finalScore1 = combo1Score
+                finalScore2 = combo2Score
+            }
+
             // Determine winner (null if tie)
             let winnerId: number | null = null
-            if (combo1Score > combo2Score) {
+            if (finalScore1 > finalScore2) {
                 winnerId = selectedCombo1.id
-            } else if (combo2Score > combo1Score) {
+            } else if (finalScore2 > finalScore1) {
                 winnerId = selectedCombo2.id
             }
 
             const battleData: TestBattleCreate = {
                 combo1_id: selectedCombo1.id,
                 combo2_id: selectedCombo2.id,
-                combo1_score: combo1Score,
-                combo2_score: combo2Score,
+                combo1_score: finalScore1,
+                combo2_score: finalScore2,
                 winner_combo_id: winnerId,
                 battle_date: new Date().toISOString().split('T')[0],
-                notes: ''
+                notes: battleMode === 'rounds' ? `Best of ${maxRounds} series` : ''
             }
 
             await addTestBattle(battleData)
