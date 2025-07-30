@@ -464,7 +464,6 @@ export default function EnhancedTournaments() {
                             {showRoundTracker && activeTournament && (
                                 <RoundTracker
                                     tournament={activeTournament}
-                                    combos={combos}
                                     onClose={handleCloseRoundTracker}
                                     formatComboName={formatComboName}
                                 />
@@ -1057,12 +1056,10 @@ function PracticeTab({
 // Round Tracker Component for Live Tournament Tracking
 function RoundTracker({
     tournament,
-    combos,
     onClose,
     formatComboName
 }: {
     tournament: TournamentWithCombos
-    combos: ComboWithParts[]
     onClose: () => void
     formatComboName: (combo: ComboWithParts | null | undefined) => string
 }) {

@@ -4,9 +4,6 @@ import { useEffect } from 'react';
 
 export default function PWAUpdateChecker() {
     useEffect(() => {
-        // Force check for service worker updates every 30 seconds when app is active
-        let updateCheckInterval: NodeJS.Timeout;
-
         const checkForUpdates = async () => {
             if ('serviceWorker' in navigator) {
                 const registration = await navigator.serviceWorker.getRegistration();
@@ -16,6 +13,9 @@ export default function PWAUpdateChecker() {
                 }
             }
         };
+
+        // Force check for service worker updates every 30 seconds when app is active
+        const updateCheckInterval = setInterval(checkForUpdates, 30000); // 30 seconds
 
         // Check for updates when app becomes visible
         const handleVisibilityChange = () => {
@@ -28,9 +28,6 @@ export default function PWAUpdateChecker() {
         const handleFocus = () => {
             checkForUpdates();
         };
-
-        // Set up periodic update checks
-        updateCheckInterval = setInterval(checkForUpdates, 30000); // 30 seconds
 
         // Add event listeners
         document.addEventListener('visibilitychange', handleVisibilityChange);
