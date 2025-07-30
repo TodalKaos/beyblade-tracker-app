@@ -433,10 +433,34 @@ export const MASTER_PARTS: MasterPart[] = [
         image: '/images/parts/blades/FoxBrush.png',
         stats: { attack: 60, defense: 30, stamina: 10, weight: 30.3, burstResistance: 0 }
     },
-    { name: 'Pegasus Blast', type: 'blade', series: 'CX-07', image: '/images/parts/blades/PegasusBlast.png' },
-    { name: 'Cerberus Flame', type: 'blade', series: 'CX-08', image: '/images/parts/blades/CerberusFlame.png' },
-    { name: 'Whale Flame', type: 'blade', series: 'CX-08', image: '/images/parts/blades/WhaleFlame.png' },
-    { name: 'Cerberus Dark', type: 'blade', series: 'CX-08', image: '/images/parts/blades/CerberusDark.png' },
+    {
+        name: 'Pegasus Blast',
+        type: 'blade',
+        series: 'CX-07',
+        image: '/images/parts/blades/PegasusBlast.png',
+        stats: { attack: 50, defense: 25, stamina: 25, weight: 32.0, burstResistance: 0 }
+    },
+    {
+        name: 'Cerberus Flame',
+        type: 'blade',
+        series: 'CX-08',
+        image: '/images/parts/blades/CerberusFlame.png',
+        stats: { attack: 45, defense: 30, stamina: 25, weight: 33.5, burstResistance: 0 }
+    },
+    {
+        name: 'Whale Flame',
+        type: 'blade',
+        series: 'CX-08',
+        image: '/images/parts/blades/WhaleFlame.png',
+        stats: { attack: 40, defense: 35, stamina: 25, weight: 34.0, burstResistance: 0 }
+    },
+    {
+        name: 'Cerberus Dark',
+        type: 'blade',
+        series: 'CX-08',
+        image: '/images/parts/blades/CerberusDark.png',
+        stats: { attack: 35, defense: 45, stamina: 20, weight: 33.8, burstResistance: 0 }
+    },
 
 
     // Collaboration Blades
@@ -702,19 +726,22 @@ export const MASTER_PARTS: MasterPart[] = [
         name: 'Assault',
         type: 'assist_blade',
         series: 'CX-07',
-        image: '/images/parts/assist_blades/Assault.png'
+        image: '/images/parts/assist_blades/Assault.png',
+        stats: { attack: 15, defense: 10, stamina: 5, weight: 5.2, burstResistance: 0 }
     },
     {
         name: 'Wheel',
         type: 'assist_blade',
         series: 'CX-08',
-        image: '/images/parts/assist_blades/Wheel.png'
+        image: '/images/parts/assist_blades/Wheel.png',
+        stats: { attack: 5, defense: 15, stamina: 15, weight: 5.5, burstResistance: 0 }
     },
     {
         name: 'Massive',
         type: 'assist_blade',
         series: 'CX-08',
-        image: '/images/parts/assist_blades/Massive.png'
+        image: '/images/parts/assist_blades/Massive.png',
+        stats: { attack: 5, defense: 25, stamina: 10, weight: 6.0, burstResistance: 0 }
     },
 
 
@@ -1150,13 +1177,42 @@ export function searchMasterParts(query: string, type?: PartType): MasterPart[] 
     const searchTerm = query.toLowerCase().trim()
     if (!searchTerm) return []
 
-    return MASTER_PARTS
+    const results = MASTER_PARTS
         .filter(part => {
             const matchesType = !type || part.type === type
-            const matchesName = part.name.toLowerCase().includes(searchTerm)
+            const partName = part.name.toLowerCase()
+
+            // Multiple search strategies for better matching
+            const containsSearch = partName.includes(searchTerm)
+            const wordStartSearch = partName.split(/[\s\-\(\)]/).some(word => word.startsWith(searchTerm))
+            const simplifiedSearch = partName.replace(/[\-\(\)\.]/g, ' ').includes(searchTerm)
+            const matchesName = containsSearch || wordStartSearch || simplifiedSearch
+
             return matchesType && matchesName
         })
-        .slice(0, 10) // Limit to 10 suggestions
+        .sort((a, b) => {
+            // Prioritize exact matches and starts-with matches
+            const aName = a.name.toLowerCase()
+            const bName = b.name.toLowerCase()
+            const aStartsWith = aName.startsWith(searchTerm)
+            const bStartsWith = bName.startsWith(searchTerm)
+            const aContains = aName.includes(searchTerm)
+            const bContains = bName.includes(searchTerm)
+
+            if (aStartsWith && !bStartsWith) return -1
+            if (!aStartsWith && bStartsWith) return 1
+            if (aContains && !bContains) return -1
+            if (!aContains && bContains) return 1
+
+            // Then alphabetical
+            return aName.localeCompare(bName)
+        })
+        .slice(0, 20) // Increased limit to 20 suggestions
+
+    // Debug logging removed - functionality working correctly
+    // if (query.toLowerCase().includes('dran') || query.toLowerCase().includes('quetz')) { ... }
+
+    return results
 }
 
 // Calculate combined stats for a beyblade combo

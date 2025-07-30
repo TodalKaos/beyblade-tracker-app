@@ -7,7 +7,7 @@ import { searchMasterParts, MASTER_PARTS } from '@/data/masterParts'
 
 interface AutocompleteInputProps {
     value: string
-    onChange: (value: string) => void
+    onChange: (value: string, partInfo?: { series?: string; type?: PartType }) => void
     type: PartType
     existingParts: BeybladePartDB[]
     placeholder?: string
@@ -20,6 +20,7 @@ interface Suggestion {
     source: 'existing' | 'master'
     series?: string
     image?: string
+    type?: PartType
 }
 
 // Helper function to get image for a part by name and type
@@ -47,7 +48,7 @@ export default function AutocompleteInput({
 
     // Generate suggestions based on input
     useEffect(() => {
-        if (!value.trim()) {
+        if (!value.trim() || value.trim().length < 1) {
             setSuggestions([])
             setShowSuggestions(false)
             return
@@ -58,16 +59,34 @@ export default function AutocompleteInput({
 
         // First, add existing parts from user's collection
         const existingMatches = existingParts
-            .filter(part =>
-                part.type === type &&
-                part.name.toLowerCase().includes(searchTerm) &&
-                part.name.toLowerCase() !== searchTerm // Don't show exact matches
-            )
+            .filter(part => {
+                if (part.type !== type) return false
+                const partName = part.name.toLowerCase()
+                const containsSearch = partName.includes(searchTerm)
+                const wordStartSearch = partName.split(/[\s\-\(\)]/).some(word => word.startsWith(searchTerm))
+                const simplifiedSearch = partName.replace(/[\-\(\)\.]/g, ' ').includes(searchTerm)
+                return (containsSearch || wordStartSearch || simplifiedSearch) && partName !== searchTerm
+            })
+            .sort((a, b) => {
+                const aName = a.name.toLowerCase()
+                const bName = b.name.toLowerCase()
+                const aStartsWith = aName.startsWith(searchTerm)
+                const bStartsWith = bName.startsWith(searchTerm)
+                const aContains = aName.includes(searchTerm)
+                const bContains = bName.includes(searchTerm)
+
+                if (aStartsWith && !bStartsWith) return -1
+                if (!aStartsWith && bStartsWith) return 1
+                if (aContains && !bContains) return -1
+                if (!aContains && bContains) return 1
+                return aName.localeCompare(bName)
+            })
             .map(part => ({
                 name: part.name,
                 source: 'existing' as const,
                 series: part.series,
-                image: getPartImage(part.name, part.type)
+                image: getPartImage(part.name, part.type),
+                type: part.type
             }))
 
         // Then, add master parts that aren't already in user's collection
@@ -82,20 +101,18 @@ export default function AutocompleteInput({
                 name: part.name,
                 source: 'master' as const,
                 series: part.series,
-                image: part.image
+                image: part.image,
+                type: part.type
             }))
 
-        console.log('AutocompleteInput Debug:', {
-            searchTerm,
-            type,
-            existingPartsCount: existingParts.length,
-            masterMatchesCount: masterMatches.length,
-            masterMatches: masterMatches.slice(0, 3), // Log first 3 for debugging
-        })
+        // Combine suggestions (existing first, then master) with increased limits
+        // For very short queries, show more results
+        const isShortQuery = searchTerm.length <= 2
+        const existingLimit = isShortQuery ? 10 : 8
+        const masterLimit = isShortQuery ? 15 : 12
 
-        // Combine suggestions (existing first, then master)
-        newSuggestions.push(...existingMatches.slice(0, 5)) // Limit existing to 5
-        newSuggestions.push(...masterMatches.slice(0, 5)) // Limit master to 5
+        newSuggestions.push(...existingMatches.slice(0, existingLimit))
+        newSuggestions.push(...masterMatches.slice(0, masterLimit))
 
         setSuggestions(newSuggestions)
         setShowSuggestions(newSuggestions.length > 0)
@@ -132,7 +149,16 @@ export default function AutocompleteInput({
 
     // Select a suggestion
     const selectSuggestion = (suggestion: Suggestion) => {
-        onChange(suggestion.name)
+        // Pass back the name and additional part info from master parts if available
+        const partInfo = suggestion.source === 'master' ? {
+            series: suggestion.series,
+            type: suggestion.type
+        } : undefined
+
+        // Debug logging removed - functionality working correctly
+        // console.log('AutocompleteInput - selecting suggestion:', { ... })
+
+        onChange(suggestion.name, partInfo)
         setShowSuggestions(false)
         setSelectedIndex(-1)
         inputRef.current?.focus()
@@ -173,7 +199,7 @@ export default function AutocompleteInput({
             {showSuggestions && suggestions.length > 0 && (
                 <div
                     ref={suggestionsRef}
-                    className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-y-auto"
+                    className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-80 overflow-y-auto"
                 >
                     {suggestions.map((suggestion, index) => (
                         <div

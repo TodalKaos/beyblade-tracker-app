@@ -279,7 +279,19 @@ export default function Collection() {
                                                 </label>
                                                 <AutocompleteInput
                                                     value={newPart.name}
-                                                    onChange={(value) => setNewPart({ ...newPart, name: value })}
+                                                    onChange={(value, partInfo) => {
+                                                        console.log('Collection - received part info:', {
+                                                            value,
+                                                            partInfo: partInfo ? { series: partInfo.series, type: partInfo.type } : null,
+                                                            currentSeries: newPart.series
+                                                        })
+                                                        const updatedPart = { ...newPart, name: value }
+                                                        // Auto-fill series if it's from master parts and series isn't already set
+                                                        if (partInfo?.series && !newPart.series) {
+                                                            updatedPart.series = partInfo.series
+                                                        }
+                                                        setNewPart(updatedPart)
+                                                    }}
                                                     type={newPart.type}
                                                     existingParts={parts}
                                                     placeholder="Start typing part name..."
@@ -378,7 +390,14 @@ export default function Collection() {
                                                 </label>
                                                 <AutocompleteInput
                                                     value={editingPart.name}
-                                                    onChange={(value) => setEditingPart({ ...editingPart, name: value })}
+                                                    onChange={(value, partInfo) => {
+                                                        const updatedPart = { ...editingPart, name: value }
+                                                        // Auto-fill series if it's from master parts and series isn't already set
+                                                        if (partInfo?.series && !editingPart.series) {
+                                                            updatedPart.series = partInfo.series
+                                                        }
+                                                        setEditingPart(updatedPart)
+                                                    }}
                                                     type={editingPart.type}
                                                     existingParts={parts}
                                                     placeholder="Start typing part name..."

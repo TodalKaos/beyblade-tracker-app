@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <!-- Simple monochrome version for Safari pinned tab -->
+  <!-- This is a placeholder - you may want to replace with your actual logo design -->
+  <circle cx="8" cy="8" r="6" fill="currentColor"/>
+  <circle cx="8" cy="8" r="3" fill="none" stroke="white" stroke-width="1"/>
+  <path d="M8 2 L10 6 L14 6 L11 9 L12 13 L8 11 L4 13 L5 9 L2 6 L6 6 Z" fill="white"/>
+</svg>

@@ -7,7 +7,8 @@
     "dev:turbo": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "generate-icons": "node scripts/generate-icons.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.52.0",
@@ -24,6 +25,7 @@
     "@types/serviceworker": "^0.0.146",
     "eslint": "^9",
     "eslint-config-next": "15.4.1",
+    "sharp": "^0.34.3",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
