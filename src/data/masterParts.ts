@@ -29,7 +29,7 @@ export const MASTER_PARTS: MasterPart[] = [
         type: 'blade',
         series: 'BX-02',
         image: '/images/parts/blades/HellsScythe.png',
-        stats: { attack: 30, defense: 35, stamina: 35, weight: 33, burstResistance: 0 }
+        stats: { attack: 30, defense: 35, stamina: 35, weight: 33.0, burstResistance: 0 }
     },
     {
         name: 'Wizard Arrow',
@@ -85,7 +85,7 @@ export const MASTER_PARTS: MasterPart[] = [
         type: 'blade',
         series: 'BX-20',
         image: '/images/parts/blades/DranDagger.jpg',
-        stats: { attack: 50, defense: 25, stamina: 25, weight: 36, burstResistance: 0 }
+        stats: { attack: 50, defense: 25, stamina: 25, weight: 36.0, burstResistance: 0 }
     },
     {
         name: 'Hells Chain',
@@ -99,7 +99,7 @@ export const MASTER_PARTS: MasterPart[] = [
         type: 'blade',
         series: 'BX-23',
         image: '/images/parts/blades/PhoenixWing.jpg',
-        stats: { attack: 60, defense: 25, stamina: 15, weight: 39, burstResistance: 0 }
+        stats: { attack: 60, defense: 25, stamina: 15, weight: 39.0, burstResistance: 0 }
     },
     {
         name: 'Wyvern Gale',
@@ -113,7 +113,7 @@ export const MASTER_PARTS: MasterPart[] = [
         type: 'blade',
         series: 'BX-26',
         image: '/images/parts/blades/UnicornSting.jpg',
-        stats: { attack: 35, defense: 35, stamina: 30, weight: 34, burstResistance: 0 }
+        stats: { attack: 35, defense: 35, stamina: 30, weight: 34.0, burstResistance: 0 }
     },
     {
         name: 'Sphinx Cowl',
@@ -127,7 +127,7 @@ export const MASTER_PARTS: MasterPart[] = [
         type: 'blade',
         series: 'BX-31',
         image: '/images/parts/blades/TyrannoBeat.jpg',
-        stats: { attack: 65, defense: 30, stamina: 5, weight: 37, burstResistance: 0 }
+        stats: { attack: 65, defense: 30, stamina: 5, weight: 37.0, burstResistance: 0 }
     },
     {
         name: 'Weiss Tiger',
@@ -168,7 +168,7 @@ export const MASTER_PARTS: MasterPart[] = [
         type: 'blade',
         series: 'BX-38',
         image: '/images/parts/blades/CrimsonGaruda.png',
-        stats: { attack: 45, defense: 25, stamina: 30, weight: 35, burstResistance: 0 }
+        stats: { attack: 45, defense: 25, stamina: 30, weight: 35.0, burstResistance: 0 }
     },
     {
         name: 'Shelter Drake',
@@ -189,7 +189,7 @@ export const MASTER_PARTS: MasterPart[] = [
         type: 'blade',
         series: 'BX-45',
         image: '/images/parts/blades/SamuraiCalibur.jpg',
-        stats: { attack: 40, defense: 30, stamina: 30, weight: 0, burstResistance: 0 }
+        stats: { attack: 40, defense: 30, stamina: 30, weight: 0.0, burstResistance: 0 }
     },
     {
         name: 'Talon Ptera',
@@ -251,7 +251,7 @@ export const MASTER_PARTS: MasterPart[] = [
         type: 'blade',
         series: 'BX-HASBRO',
         image: '/images/parts/blades/TuskMammoth.jpg',
-        stats: { attack: 33, defense: 35, stamina: 32, weight: 32, burstResistance: 0 }
+        stats: { attack: 33, defense: 35, stamina: 32, weight: 32.0, burstResistance: 0 }
     },
     {
         name: 'Yell Kong',
@@ -265,7 +265,7 @@ export const MASTER_PARTS: MasterPart[] = [
         type: 'blade',
         series: 'BX-HASBRO',
         image: '/images/parts/blades/RoarTyranno.jpg',
-        stats: { attack: 60, defense: 28, stamina: 12, weight: 36, burstResistance: 0 }
+        stats: { attack: 60, defense: 28, stamina: 12, weight: 36.0, burstResistance: 0 }
     },
 
 
@@ -289,7 +289,7 @@ export const MASTER_PARTS: MasterPart[] = [
         type: 'blade',
         series: 'UX-02',
         image: '/images/parts/blades/HellsHammer.jpg',
-        stats: { attack: 50, defense: 25, stamina: 25, weight: 33, burstResistance: 0 }
+        stats: { attack: 50, defense: 25, stamina: 25, weight: 33.0, burstResistance: 0 }
     },
     {
         name: 'Wizard Rod',
@@ -310,7 +310,7 @@ export const MASTER_PARTS: MasterPart[] = [
         type: 'blade',
         series: 'UX-06',
         image: '/images/parts/blades/LeonCrest.jpg',
-        stats: { attack: 15, defense: 70, stamina: 15, weight: 35, burstResistance: 0 }
+        stats: { attack: 15, defense: 70, stamina: 15, weight: 35.0, burstResistance: 0 }
     },
     {
         name: 'Phoenix Rudder',
@@ -345,7 +345,7 @@ export const MASTER_PARTS: MasterPart[] = [
         type: 'blade',
         series: 'UX-11',
         image: '/images/parts/blades/ImpactDrake.jpg',
-        stats: { attack: 75, defense: 25, stamina: 10, weight: 39, burstResistance: 0 }
+        stats: { attack: 75, defense: 25, stamina: 10, weight: 39.0, burstResistance: 0 }
     },
     {
         name: 'Ghost Circle',
@@ -359,7 +359,7 @@ export const MASTER_PARTS: MasterPart[] = [
         type: 'blade',
         series: 'UX-13',
         image: '/images/parts/blades/GolemRock.jpg',
-        stats: { attack: 30, defense: 60, stamina: 10, weight: 34, burstResistance: 0 }
+        stats: { attack: 30, defense: 60, stamina: 10, weight: 34.0, burstResistance: 0 }
     },
     {
         name: 'Scorpio Spear',
@@ -373,7 +373,7 @@ export const MASTER_PARTS: MasterPart[] = [
         type: 'blade',
         series: 'UX-15',
         image: '/images/parts/blades/SharkScale.png',
-        stats: { attack: 70, defense: 15, stamina: 15, weight: 0, burstResistance: 0 }
+        stats: { attack: 70, defense: 15, stamina: 15, weight: 0.0, burstResistance: 0 }
     },
     {
         name: 'Hover Wyvern',
@@ -410,14 +410,14 @@ export const MASTER_PARTS: MasterPart[] = [
         type: 'blade',
         series: 'CX-05',
         image: '/images/parts/blades/HellsReaper.png',
-        stats: { attack: 40, defense: 20, stamina: 40, weight: 29, burstResistance: 0 }
+        stats: { attack: 40, defense: 20, stamina: 40, weight: 29.0, burstResistance: 0 }
     },
     {
         name: 'Rhino Reaper',
         type: 'blade',
         series: 'CX-05',
         image: '/images/parts/blades/RhinoReaper.png',
-        stats: { attack: 35, defense: 20, stamina: 45, weight: 29, burstResistance: 0 }
+        stats: { attack: 35, defense: 20, stamina: 45, weight: 29.0, burstResistance: 0 }
     },
     {
         name: 'Hells Arc',
@@ -483,7 +483,7 @@ export const MASTER_PARTS: MasterPart[] = [
         type: 'blade',
         series: 'COLLAB - STAR WARS',
         image: '/images/parts/blades/GeneralGrievous.jpg',
-        stats: { attack: 23, defense: 60, stamina: 17, weight: 31, burstResistance: 0 }
+        stats: { attack: 23, defense: 60, stamina: 17, weight: 31.0, burstResistance: 0 }
     },
     {
         name: 'Iron Man (Knight Shield)',
@@ -612,7 +612,7 @@ export const MASTER_PARTS: MasterPart[] = [
         type: 'blade',
         series: 'X-OVER',
         image: '/images/parts/blades/DracielShield.png',
-        stats: { attack: 30, defense: 50, stamina: 20, weight: 28, burstResistance: 0 }
+        stats: { attack: 30, defense: 50, stamina: 20, weight: 28.0, burstResistance: 0 }
     },
     {
         name: 'Dragoon Storm',
@@ -647,7 +647,7 @@ export const MASTER_PARTS: MasterPart[] = [
         type: 'blade',
         series: 'X-OVER',
         image: '/images/parts/blades/LightningLDragoUT.png',
-        stats: { attack: 55, defense: 25, stamina: 20, weight: 34, burstResistance: 0 }
+        stats: { attack: 55, defense: 25, stamina: 20, weight: 34.0, burstResistance: 0 }
     },
     {
         name: 'Rock Leone',
@@ -661,7 +661,7 @@ export const MASTER_PARTS: MasterPart[] = [
         type: 'blade',
         series: 'X-OVER',
         image: '/images/parts/blades/StormPegasis.jpg',
-        stats: { attack: 55, defense: 15, stamina: 30, weight: 31, burstResistance: 0 }
+        stats: { attack: 55, defense: 15, stamina: 30, weight: 31.0, burstResistance: 0 }
     },
     {
         name: 'Victory Valkyrie',
@@ -675,7 +675,7 @@ export const MASTER_PARTS: MasterPart[] = [
         type: 'blade',
         series: 'X-OVER',
         image: '/images/parts/blades/XenoXcalibur.png',
-        stats: { attack: 65, defense: 25, stamina: 10, weight: 31, burstResistance: 0 }
+        stats: { attack: 65, defense: 25, stamina: 10, weight: 31.0, burstResistance: 0 }
     },
 
 
@@ -713,7 +713,7 @@ export const MASTER_PARTS: MasterPart[] = [
         type: 'assist_blade',
         series: 'CX-05',
         image: '/images/parts/assist_blades/Charge.png',
-        stats: { attack: 15, defense: 20, stamina: 5, weight: 5, burstResistance: 0 }
+        stats: { attack: 15, defense: 20, stamina: 5, weight: 5.0, burstResistance: 0 }
     },
     {
         name: 'Jaggy',
@@ -750,7 +750,7 @@ export const MASTER_PARTS: MasterPart[] = [
         name: '0-70',
         type: 'ratchet',
         image: '/images/parts/ratchets/0-70.png',
-        stats: { attack: 3, defense: 0, stamina: 14, weight: 7, burstResistance: 0 }
+        stats: { attack: 3, defense: 0, stamina: 14, weight: 7.0, burstResistance: 0 }
     },
     {
         name: '0-80',
@@ -762,7 +762,7 @@ export const MASTER_PARTS: MasterPart[] = [
         name: '1-60',
         type: 'ratchet',
         image: '/images/parts/ratchets/1-60.png',
-        stats: { attack: 17, defense: 9, stamina: 4, weight: 6, burstResistance: 0 }
+        stats: { attack: 17, defense: 9, stamina: 4, weight: 6.0, burstResistance: 0 }
     },
     {
         name: '1-70',
@@ -822,7 +822,7 @@ export const MASTER_PARTS: MasterPart[] = [
         name: '4-50',
         type: 'ratchet',
         image: '/images/parts/ratchets/4-50.png',
-        stats: { attack: 12, defense: 13, stamina: 5, weight: 0, burstResistance: 0 }
+        stats: { attack: 12, defense: 13, stamina: 5, weight: 0.0, burstResistance: 0 }
     },
     {
         name: '4-55',
@@ -846,7 +846,7 @@ export const MASTER_PARTS: MasterPart[] = [
         name: '4-80',
         type: 'ratchet',
         image: '/images/parts/ratchets/4-80.png',
-        stats: { attack: 11, defense: 11, stamina: 8, weight: 7, burstResistance: 0 }
+        stats: { attack: 11, defense: 11, stamina: 8, weight: 7.0, burstResistance: 0 }
     },
     {
         name: '5-60',
@@ -945,7 +945,7 @@ export const MASTER_PARTS: MasterPart[] = [
         name: 'Bound Spike',
         type: 'bit',
         image: '/images/parts/bits/BoundSpike.png',
-        stats: { attack: 5, defense: 60, stamina: 30, weight: 2, burstResistance: 0 }
+        stats: { attack: 5, defense: 60, stamina: 30, weight: 2.0, burstResistance: 30 }
     },
     {
         name: 'Cyclone',
@@ -963,7 +963,7 @@ export const MASTER_PARTS: MasterPart[] = [
         name: 'Dot',
         type: 'bit',
         image: '/images/parts/bits/Dot.png',
-        stats: { attack: 10, defense: 55, stamina: 25, weight: 2, burstResistance: 30 }
+        stats: { attack: 10, defense: 55, stamina: 25, weight: 2.0, burstResistance: 30 }
     },
     {
         name: 'Elevate',
@@ -987,7 +987,7 @@ export const MASTER_PARTS: MasterPart[] = [
         name: 'Gear Ball',
         type: 'bit',
         image: '/images/parts/bits/GearBall.png',
-        stats: { attack: 10, defense: 15, stamina: 45, weight: 2, burstResistance: 30 }
+        stats: { attack: 10, defense: 15, stamina: 45, weight: 2.0, burstResistance: 30 }
     },
     {
         name: 'Gear Flat',
@@ -999,7 +999,7 @@ export const MASTER_PARTS: MasterPart[] = [
         name: 'Gear Needle',
         type: 'bit',
         image: '/images/parts/bits/GearNeedle.png',
-        stats: { attack: 20, defense: 40, stamina: 10, weight: 2, burstResistance: 30 }
+        stats: { attack: 20, defense: 40, stamina: 10, weight: 2.0, burstResistance: 30 }
     },
     {
         name: 'Gear Point',
@@ -1059,7 +1059,7 @@ export const MASTER_PARTS: MasterPart[] = [
         name: 'Low Orb',
         type: 'bit',
         image: '/images/parts/bits/LowOrb.png',
-        stats: { attack: 5, defense: 25, stamina: 55, weight: 0, burstResistance: 30 }
+        stats: { attack: 5, defense: 25, stamina: 55, weight: 0.0, burstResistance: 30 }
     },
     {
         name: 'Low Rush',
@@ -1071,7 +1071,7 @@ export const MASTER_PARTS: MasterPart[] = [
         name: 'Merge',
         type: 'bit',
         image: '/images/parts/bits/Merge.png',
-        stats: { attack: 50, defense: 20, stamina: 10, weight: 0, burstResistance: 80 }
+        stats: { attack: 50, defense: 20, stamina: 10, weight: 0.0, burstResistance: 80 }
     },
     {
         name: 'Metal Needle',
@@ -1083,13 +1083,13 @@ export const MASTER_PARTS: MasterPart[] = [
         name: 'Needle',
         type: 'bit',
         image: '/images/parts/bits/Needle.png',
-        stats: { attack: 10, defense: 50, stamina: 30, weight: 2, burstResistance: 30 }
+        stats: { attack: 10, defense: 50, stamina: 30, weight: 2.0, burstResistance: 30 }
     },
     {
         name: 'Orb',
         type: 'bit',
         image: '/images/parts/bits/Orb.png',
-        stats: { attack: 10, defense: 30, stamina: 50, weight: 2, burstResistance: 30 }
+        stats: { attack: 10, defense: 30, stamina: 50, weight: 2.0, burstResistance: 30 }
     },
     {
         name: 'Point',
@@ -1119,7 +1119,7 @@ export const MASTER_PARTS: MasterPart[] = [
         name: 'Spike',
         type: 'bit',
         image: '/images/parts/bits/Spike.png',
-        stats: { attack: 10, defense: 45, stamina: 35, weight: 2, burstResistance: 30 }
+        stats: { attack: 10, defense: 45, stamina: 35, weight: 2.0, burstResistance: 30 }
     },
     {
         name: 'Taper',
@@ -1131,13 +1131,13 @@ export const MASTER_PARTS: MasterPart[] = [
         name: 'Trans Point',
         type: 'bit',
         image: '/images/parts/bits/TransPoint.png',
-        stats: { attack: 35, defense: 25, stamina: 25, weight: 0, burstResistance: 80 }
+        stats: { attack: 35, defense: 25, stamina: 25, weight: 0.0, burstResistance: 80 }
     },
     {
         name: 'Under Flat',
         type: 'bit',
         image: '/images/parts/bits/UnderFlat.png',
-        stats: { attack: 55, defense: 5, stamina: 5, weight: 0, burstResistance: 80 }
+        stats: { attack: 55, defense: 5, stamina: 5, weight: 0.0, burstResistance: 80 }
     },
     {
         name: 'Under Needle',
@@ -1161,7 +1161,7 @@ export const MASTER_PARTS: MasterPart[] = [
         name: 'Wedge',
         type: 'bit',
         image: '/images/parts/bits/Wedge.png',
-        stats: { attack: 5, defense: 55, stamina: 30, weight: 0, burstResistance: 30 }
+        stats: { attack: 5, defense: 55, stamina: 30, weight: 0.0, burstResistance: 30 }
     },
     {
         name: 'Zap',
