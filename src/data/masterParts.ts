@@ -1254,6 +1254,9 @@ export function calculateComboStats(combo: {
         }
     });
 
+    // Round weight to 1 decimal place to fix floating-point precision issues
+    stats.weight = Math.round(stats.weight * 10) / 10;
+
     return {
         ...stats,
         canUseAssistBlade,
