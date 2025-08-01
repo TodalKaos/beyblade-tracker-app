@@ -254,19 +254,19 @@ export default function Combos() {
             <div className="min-h-screen flex flex-col">
                 <Navigation currentPage="combos" />
                 <div className="bg-gradient-to-br from-purple-50 to-pink-100 dark:from-gray-900 dark:to-gray-800 flex-1">
-                    <div className="container mx-auto px-4 py-16">
-                        <header className="text-center mb-16">
-                            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+                    <div className="container mx-auto px-4 py-8 sm:py-16">
+                        <header className="text-center mb-8 sm:mb-16">
+                            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
                                 Combo Builder
                             </h1>
-                            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+                            <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto px-4">
                                 Create and manage your Beyblade combinations for tournaments.
                             </p>
                         </header>
 
                         <div className="max-w-6xl mx-auto">
                             {/* Quick Stats */}
-                            <div className="grid md:grid-cols-3 gap-4 mb-8">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
                                 <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg text-center">
                                     <h3 className="font-semibold text-purple-900 dark:text-purple-300">Total Combos</h3>
                                     <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{combos.length}</p>
@@ -284,19 +284,19 @@ export default function Combos() {
                             </div>
 
                             {/* Add Combo Button */}
-                            <div className="mb-8 text-center flex gap-4 justify-center">
+                            <div className="mb-8 text-center flex flex-col sm:flex-row gap-4 justify-center">
                                 <button
                                     onClick={() => {
                                         setShowAddForm(true)
                                         setEditingCombo(null)
                                     }}
-                                    className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                                    className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
                                 >
                                     Create New Combo
                                 </button>
                                 <button
                                     onClick={loadData}
-                                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                                    className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
                                     title="Refresh combo data"
                                 >
                                     🔄 Refresh
@@ -321,7 +321,7 @@ export default function Combos() {
                                             />
                                         </div>
 
-                                        <div className="grid md:grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                                     Blade
@@ -431,17 +431,17 @@ export default function Combos() {
                                             )
                                         })()}
 
-                                        <div className="flex gap-4">
+                                        <div className="flex flex-col sm:flex-row gap-4">
                                             <button
                                                 type="submit"
-                                                className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                                                className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
                                             >
                                                 Create Combo
                                             </button>
                                             <button
                                                 type="button"
                                                 onClick={() => setShowAddForm(false)}
-                                                className="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                                                className="w-full sm:w-auto bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
                                             >
                                                 Cancel
                                             </button>
@@ -468,7 +468,7 @@ export default function Combos() {
                                             />
                                         </div>
 
-                                        <div className="grid md:grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                                     Blade
@@ -606,17 +606,17 @@ export default function Combos() {
                                             )
                                         })()}
 
-                                        <div className="flex gap-4">
+                                        <div className="flex flex-col sm:flex-row gap-4">
                                             <button
                                                 type="submit"
-                                                className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                                                className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
                                             >
                                                 Save Changes
                                             </button>
                                             <button
                                                 type="button"
                                                 onClick={cancelEditing}
-                                                className="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                                                className="w-full sm:w-auto bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
                                             >
                                                 Cancel
                                             </button>
@@ -643,10 +643,10 @@ export default function Combos() {
                                     <div className="space-y-4">
                                         {combos.map((combo) => (
                                             <div key={combo.id} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
-                                                <div className="flex justify-between items-start mb-2">
+                                                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
                                                     <div className="flex-1">
                                                         <h4 className="font-semibold text-gray-900 dark:text-white text-lg">{combo.name}</h4>
-                                                        <p className="text-gray-600 dark:text-gray-300">{formatComboDisplay(combo)}</p>
+                                                        <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base">{formatComboDisplay(combo)}</p>
 
                                                         {/* Combo Stats Display */}
                                                         {(() => {
@@ -654,7 +654,7 @@ export default function Combos() {
                                                             if (!stats) return null
 
                                                             return (
-                                                                <div className="mt-2 grid grid-cols-5 gap-2 text-xs">
+                                                                <div className="mt-2 grid grid-cols-3 sm:grid-cols-5 gap-2 text-xs">
                                                                     <div className="text-center">
                                                                         <div className="font-bold text-red-600 dark:text-red-400">{stats.attack}</div>
                                                                         <div className="text-gray-500 dark:text-gray-400">ATK</div>
@@ -667,11 +667,11 @@ export default function Combos() {
                                                                         <div className="font-bold text-green-600 dark:text-green-400">{stats.stamina}</div>
                                                                         <div className="text-gray-500 dark:text-gray-400">STA</div>
                                                                     </div>
-                                                                    <div className="text-center">
+                                                                    <div className="text-center sm:block hidden">
                                                                         <div className="font-bold text-purple-600 dark:text-purple-400">{stats.weight}g</div>
                                                                         <div className="text-gray-500 dark:text-gray-400">WGT</div>
                                                                     </div>
-                                                                    <div className="text-center">
+                                                                    <div className="text-center sm:block hidden">
                                                                         <div className="font-bold text-orange-600 dark:text-orange-400">{stats.burstResistance}</div>
                                                                         <div className="text-gray-500 dark:text-gray-400">BST</div>
                                                                     </div>
@@ -685,8 +685,8 @@ export default function Combos() {
                                                             </p>
                                                         )}
                                                     </div>
-                                                    <div className="flex items-center gap-4">
-                                                        <div className="text-right">
+                                                    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                                                        <div className="text-center sm:text-right">
                                                             <div className="text-lg font-bold text-purple-600 dark:text-purple-400">
                                                                 {combo.total_points || 0} pts
                                                             </div>
@@ -694,20 +694,20 @@ export default function Combos() {
                                                                 {combo.tournaments_used || 0} tournaments
                                                             </div>
                                                         </div>
-                                                        <div className="flex gap-2">
+                                                        <div className="flex gap-2 justify-center sm:justify-start">
                                                             <button
                                                                 onClick={() => startEditing(combo)}
-                                                                className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm transition-colors"
+                                                                className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded text-sm transition-colors flex-1 sm:flex-none"
                                                                 title="Edit combo"
                                                             >
-                                                                ✏️
+                                                                ✏️ Edit
                                                             </button>
                                                             <button
                                                                 onClick={() => handleDeleteCombo(combo.id)}
-                                                                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm transition-colors"
+                                                                className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm transition-colors flex-1 sm:flex-none"
                                                                 title="Delete combo"
                                                             >
-                                                                🗑️
+                                                                🗑️ Delete
                                                             </button>
                                                         </div>
                                                     </div>

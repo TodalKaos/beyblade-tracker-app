@@ -189,41 +189,41 @@ export default function Collection() {
             <div className="min-h-screen flex flex-col">
                 <Navigation currentPage="collection" />
                 <div className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex-1">
-                    <div className="container mx-auto px-4 py-16">
-                        <header className="text-center mb-16">
-                            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+                    <div className="container mx-auto px-4 py-8 sm:py-16">
+                        <header className="text-center mb-8 sm:mb-16">
+                            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
                                 Collection Manager
                             </h1>
-                            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+                            <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
                                 Manage your Beyblade parts collection. Track blades, assist blades, ratchets, and bits.
                             </p>
                         </header>
 
                         <div className="max-w-6xl mx-auto">
                             {/* Collection Stats */}
-                            <div className="grid md:grid-cols-4 gap-4 mb-8">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
                                 <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg text-center">
-                                    <h3 className="font-semibold text-blue-900 dark:text-blue-300">Blades</h3>
-                                    <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.blade || 0}</p>
+                                    <h3 className="font-semibold text-blue-900 dark:text-blue-300 text-sm sm:text-base">Blades</h3>
+                                    <p className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.blade || 0}</p>
                                 </div>
                                 <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg text-center">
-                                    <h3 className="font-semibold text-green-900 dark:text-green-300">Assist Blades</h3>
-                                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.assist_blade || 0}</p>
+                                    <h3 className="font-semibold text-green-900 dark:text-green-300 text-sm sm:text-base">Assist Blades</h3>
+                                    <p className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400">{stats.assist_blade || 0}</p>
                                 </div>
                                 <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg text-center">
-                                    <h3 className="font-semibold text-purple-900 dark:text-purple-300">Ratchets</h3>
-                                    <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.ratchet || 0}</p>
+                                    <h3 className="font-semibold text-purple-900 dark:text-purple-300 text-sm sm:text-base">Ratchets</h3>
+                                    <p className="text-xl sm:text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.ratchet || 0}</p>
                                 </div>
                                 <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg text-center">
-                                    <h3 className="font-semibold text-orange-900 dark:text-orange-300">Bits</h3>
-                                    <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.bit || 0}</p>
+                                    <h3 className="font-semibold text-orange-900 dark:text-orange-300 text-sm sm:text-base">Bits</h3>
+                                    <p className="text-xl sm:text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.bit || 0}</p>
                                 </div>
                             </div>
 
                             {/* Search and Filter Controls */}
                             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
-                                <div className="grid md:grid-cols-3 gap-4">
-                                    <div className="md:col-span-2">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                    <div className="sm:col-span-2">
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                             Search Parts
                                         </label>
@@ -601,7 +601,7 @@ export default function Collection() {
 
                                         <div className="grid gap-4">
                                             {currentParts.map((part) => (
-                                                <div key={part.id} className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                                                <div key={part.id} className="flex flex-col sm:flex-row items-center sm:items-start gap-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                                                     {/* Part Image */}
                                                     <div className="flex-shrink-0">
                                                         <Image
@@ -618,7 +618,7 @@ export default function Collection() {
                                                     </div>
 
                                                     {/* Part Info */}
-                                                    <div className="flex-1 min-w-0">
+                                                    <div className="flex-1 min-w-0 text-center sm:text-left">
                                                         <h4 className="font-semibold text-gray-900 dark:text-white">{part.name}</h4>
                                                         <p className="text-sm text-gray-600 dark:text-gray-300">
                                                             {part.type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
@@ -633,21 +633,21 @@ export default function Collection() {
                                                     </div>
 
                                                     {/* Quantity and Actions */}
-                                                    <div className="flex items-center gap-4">
+                                                    <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
                                                         <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
                                                             x{part.quantity}
                                                         </div>
-                                                        <div className="flex gap-2">
+                                                        <div className="flex gap-2 w-full sm:w-auto">
                                                             <button
                                                                 onClick={() => startEditing(part)}
-                                                                className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm transition-colors"
+                                                                className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded text-sm transition-colors flex-1 sm:flex-none"
                                                                 title="Edit part"
                                                             >
                                                                 ✏️ Edit
                                                             </button>
                                                             <button
                                                                 onClick={() => handleDeletePart(part.id)}
-                                                                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm transition-colors"
+                                                                className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm transition-colors flex-1 sm:flex-none"
                                                                 title="Delete part"
                                                             >
                                                                 🗑️ Delete

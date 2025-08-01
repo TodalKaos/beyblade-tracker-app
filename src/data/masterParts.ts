@@ -5,6 +5,7 @@ export interface MasterPart {
     name: string
     type: PartType
     series?: string
+    color?: string // Color variant of the part
     image?: string // Path to the part image
     stats?: {
         attack: number      // 0-100 scale
@@ -18,7 +19,7 @@ export interface MasterPart {
 export const MASTER_PARTS: MasterPart[] = [
     // BX Series Blades
     {
-        name: 'Dran Sword',
+        name: 'Dran Sword (Original)',
         type: 'blade',
         series: 'BX-01',
         image: '/images/parts/blades/DranSword.png',
@@ -270,13 +271,6 @@ export const MASTER_PARTS: MasterPart[] = [
 
 
     // UX Series Blades
-    {
-        name: 'Aero Pegasus',
-        type: 'blade',
-        series: 'UX-00',
-        image: '/images/parts/blades/AeroPegasus.jpg',
-        stats: { attack: 70, defense: 30, stamina: 35, weight: 38.3, burstResistance: 0 }
-    },
     {
         name: 'Dran Buster',
         type: 'blade',
@@ -678,6 +672,14 @@ export const MASTER_PARTS: MasterPart[] = [
         stats: { attack: 65, defense: 25, stamina: 10, weight: 31.0, burstResistance: 0 }
     },
 
+    // Rare Bey Get Battle Blades
+    {
+        name: 'Aero Pegasus',
+        type: 'blade',
+        series: 'RARE BEY GET BATTLE',
+        image: '/images/parts/blades/AeroPegasus.jpg',
+        stats: { attack: 70, defense: 30, stamina: 35, weight: 38.3, burstResistance: 0 }
+    },
 
     // Assist Blades (fewer, as they're optional)
     {

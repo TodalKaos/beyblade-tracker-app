@@ -401,22 +401,22 @@ export default function EnhancedTournaments() {
                             </div>
 
                             {/* Tournament Stats */}
-                            <div className="grid md:grid-cols-4 gap-4 mb-8">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
                                 <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg text-center">
-                                    <h3 className="font-semibold text-green-900 dark:text-green-300">Tournaments</h3>
-                                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.totalTournaments || 0}</p>
+                                    <h3 className="font-semibold text-green-900 dark:text-green-300 text-sm sm:text-base">Tournaments</h3>
+                                    <p className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400">{stats.totalTournaments || 0}</p>
                                 </div>
                                 <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg text-center">
-                                    <h3 className="font-semibold text-blue-900 dark:text-blue-300">Total Points</h3>
-                                    <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.totalPoints || 0}</p>
+                                    <h3 className="font-semibold text-blue-900 dark:text-blue-300 text-sm sm:text-base">Total Points</h3>
+                                    <p className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.totalPoints || 0}</p>
                                 </div>
                                 <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg text-center">
-                                    <h3 className="font-semibold text-purple-900 dark:text-purple-300">Avg Points</h3>
-                                    <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.averagePoints || 0}</p>
+                                    <h3 className="font-semibold text-purple-900 dark:text-purple-300 text-sm sm:text-base">Avg Points</h3>
+                                    <p className="text-xl sm:text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.averagePoints || 0}</p>
                                 </div>
                                 <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg text-center">
-                                    <h3 className="font-semibold text-orange-900 dark:text-orange-300">Top Combo</h3>
-                                    <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.topComboPoints || 0}</p>
+                                    <h3 className="font-semibold text-orange-900 dark:text-orange-300 text-sm sm:text-base">Top Combo</h3>
+                                    <p className="text-xl sm:text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.topComboPoints || 0}</p>
                                 </div>
                             </div>
 
@@ -518,7 +518,7 @@ function TournamentsTab({
     return (
         <div>
             {/* Add Tournament Button */}
-            <div className="mb-6">
+            <div className="mb-6 text-center md:text-left">
                 <button
                     onClick={() => {
                         setShowAddForm(true)
@@ -543,7 +543,7 @@ function TournamentsTab({
                             })
                         }
                     }}
-                    className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+                    className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center gap-2 mx-auto md:mx-0"
                 >
                     <span>+</span>
                     Add New Tournament
@@ -800,8 +800,8 @@ function TournamentsTab({
                 ) : (
                     tournaments.map((tournament: TournamentWithCombos) => (
                         <div key={tournament.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-                            <div className="flex justify-between items-start mb-4">
-                                <div>
+                            <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 mb-4 text-center lg:text-left">
+                                <div className="flex-1">
                                     <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
                                         {tournament.name}
                                     </h3>
@@ -816,24 +816,24 @@ function TournamentsTab({
                                         {tournament.total_points} points total
                                     </p>
                                 </div>
-                                <div className="flex gap-2">
+                                <div className="flex flex-col sm:flex-row gap-2 lg:flex-col justify-center lg:justify-start">
                                     <button
                                         onClick={() => handleStartRoundTracker(tournament)}
-                                        className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+                                        className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm"
                                         title="Track Rounds Live"
                                     >
                                         📊 Track Rounds
                                     </button>
                                     <button
                                         onClick={() => handleEditTournament(tournament)}
-                                        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+                                        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm"
                                         title="Edit Tournament"
                                     >
                                         ✏️ Edit
                                     </button>
                                     <button
                                         onClick={() => handleDeleteTournament(tournament.id)}
-                                        className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+                                        className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm"
                                         title="Delete Tournament"
                                     >
                                         🗑️ Delete
@@ -841,18 +841,18 @@ function TournamentsTab({
                                 </div>
                             </div>
 
-                            <div className="grid md:grid-cols-3 gap-4">
-                                <div className="bg-gray-50 dark:bg-gray-700 rounded p-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div className="bg-gray-50 dark:bg-gray-700 rounded p-3 text-center sm:text-left">
                                     <div className="font-medium text-gray-900 dark:text-white">Combo 1</div>
                                     <div className="text-sm text-gray-600 dark:text-gray-300">{formatComboName(tournament.combo1)}</div>
                                     <div className="text-lg font-bold text-blue-600 dark:text-blue-400">{tournament.combo1_points} pts</div>
                                 </div>
-                                <div className="bg-gray-50 dark:bg-gray-700 rounded p-3">
+                                <div className="bg-gray-50 dark:bg-gray-700 rounded p-3 text-center sm:text-left">
                                     <div className="font-medium text-gray-900 dark:text-white">Combo 2</div>
                                     <div className="text-sm text-gray-600 dark:text-gray-300">{formatComboName(tournament.combo2)}</div>
                                     <div className="text-lg font-bold text-blue-600 dark:text-blue-400">{tournament.combo2_points} pts</div>
                                 </div>
-                                <div className="bg-gray-50 dark:bg-gray-700 rounded p-3">
+                                <div className="bg-gray-50 dark:bg-gray-700 rounded p-3 text-center sm:text-left">
                                     <div className="font-medium text-gray-900 dark:text-white">Combo 3</div>
                                     <div className="text-sm text-gray-600 dark:text-gray-300">{formatComboName(tournament.combo3)}</div>
                                     <div className="text-lg font-bold text-blue-600 dark:text-blue-400">{tournament.combo3_points} pts</div>
