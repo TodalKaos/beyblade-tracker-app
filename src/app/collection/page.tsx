@@ -320,8 +320,25 @@ export default function Collection() {
                                                 <input
                                                     type="number"
                                                     min="1"
-                                                    value={newPart.quantity || 1}
-                                                    onChange={(e) => setNewPart({ ...newPart, quantity: parseInt(e.target.value) || 1 })}
+                                                    value={newPart.quantity === 0 ? '' : newPart.quantity || ''}
+                                                    onChange={(e) => {
+                                                        const value = e.target.value
+                                                        if (value === '') {
+                                                            setNewPart({ ...newPart, quantity: 0 }) // Temporarily allow 0 for empty state
+                                                        } else {
+                                                            const numValue = parseInt(value)
+                                                            setNewPart({
+                                                                ...newPart,
+                                                                quantity: isNaN(numValue) ? 1 : Math.max(1, numValue)
+                                                            })
+                                                        }
+                                                    }}
+                                                    onBlur={(e) => {
+                                                        // Ensure we have a valid quantity when field loses focus
+                                                        if (!e.target.value || parseInt(e.target.value) < 1) {
+                                                            setNewPart({ ...newPart, quantity: 1 })
+                                                        }
+                                                    }}
                                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                                                 />
                                             </div>
@@ -426,8 +443,25 @@ export default function Collection() {
                                                 <input
                                                     type="number"
                                                     min="1"
-                                                    value={editingPart.quantity || 1}
-                                                    onChange={(e) => setEditingPart({ ...editingPart, quantity: parseInt(e.target.value) || 1 })}
+                                                    value={editingPart.quantity === 0 ? '' : editingPart.quantity || ''}
+                                                    onChange={(e) => {
+                                                        const value = e.target.value
+                                                        if (value === '') {
+                                                            setEditingPart({ ...editingPart, quantity: 0 }) // Temporarily allow 0 for empty state
+                                                        } else {
+                                                            const numValue = parseInt(value)
+                                                            setEditingPart({
+                                                                ...editingPart,
+                                                                quantity: isNaN(numValue) ? 1 : Math.max(1, numValue)
+                                                            })
+                                                        }
+                                                    }}
+                                                    onBlur={(e) => {
+                                                        // Ensure we have a valid quantity when field loses focus
+                                                        if (!e.target.value || parseInt(e.target.value) < 1) {
+                                                            setEditingPart({ ...editingPart, quantity: 1 })
+                                                        }
+                                                    }}
                                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                                                 />
                                             </div>
