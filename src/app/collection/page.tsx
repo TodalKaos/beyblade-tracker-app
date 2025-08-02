@@ -55,7 +55,7 @@ export default function Collection() {
 
     const handleSearch = useCallback(async () => {
         try {
-            let searchResults = await searchParts(searchTerm, filterType)
+            const searchResults = await searchParts(searchTerm, filterType)
 
             // Apply sorting
             searchResults.sort((a, b) => {
@@ -323,7 +323,7 @@ export default function Collection() {
                                         </label>
                                         <select
                                             value={sortBy}
-                                            onChange={(e) => setSortBy(e.target.value as any)}
+                                            onChange={(e) => setSortBy(e.target.value as 'name' | 'type' | 'quantity' | 'series' | 'date_added')}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                                         >
                                             <option value="name">Name</option>
@@ -393,7 +393,7 @@ export default function Collection() {
                                                         <span className="font-medium">Existing Part Found</span>
                                                     </div>
                                                     <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
-                                                        You already have "{existingPart.name}" (x{existingPart.quantity}).
+                                                        You already have &quot;{existingPart.name}&quot; (x{existingPart.quantity}).
                                                         Adding this will increase the quantity to x{existingPart.quantity + newPart.quantity}.
                                                     </p>
                                                 </div>
