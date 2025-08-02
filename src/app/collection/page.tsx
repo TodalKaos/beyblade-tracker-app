@@ -27,6 +27,10 @@ export default function Collection() {
     const [searchTerm, setSearchTerm] = useState('')
     const [filterType, setFilterType] = useState<PartType | 'all'>('all')
 
+    // Sorting state
+    const [sortBy, setSortBy] = useState<'name' | 'type' | 'quantity' | 'series' | 'date_added'>('name')
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1)
     const [itemsPerPage, setItemsPerPage] = useState(10)
@@ -51,13 +55,41 @@ export default function Collection() {
 
     const handleSearch = useCallback(async () => {
         try {
-            const searchResults = await searchParts(searchTerm, filterType)
+            let searchResults = await searchParts(searchTerm, filterType)
+
+            // Apply sorting
+            searchResults.sort((a, b) => {
+                let comparison = 0
+
+                switch (sortBy) {
+                    case 'name':
+                        comparison = a.name.localeCompare(b.name)
+                        break
+                    case 'type':
+                        comparison = a.type.localeCompare(b.type)
+                        break
+                    case 'quantity':
+                        comparison = a.quantity - b.quantity
+                        break
+                    case 'series':
+                        comparison = (a.series || '').localeCompare(b.series || '')
+                        break
+                    case 'date_added':
+                        comparison = new Date(a.created_at || '').getTime() - new Date(b.created_at || '').getTime()
+                        break
+                    default:
+                        comparison = 0
+                }
+
+                return sortOrder === 'desc' ? -comparison : comparison
+            })
+
             setParts(searchResults)
             setCurrentPage(1) // Reset to first page when searching
         } catch (error) {
             console.error('Error searching parts:', error)
         }
-    }, [searchTerm, filterType])
+    }, [searchTerm, filterType, sortBy, sortOrder])
 
     // Pagination calculations
     const totalItems = parts.length
@@ -110,15 +142,41 @@ export default function Collection() {
     const handleAddPart = async (e: React.FormEvent) => {
         e.preventDefault()
         try {
-            await addPart(newPart)
+            // Check if part already exists (same name and type)
+            const existingPart = parts.find(
+                part => part.name.toLowerCase() === newPart.name.toLowerCase() &&
+                    part.type === newPart.type
+            )
+
+            if (existingPart) {
+                // Update existing part quantity
+                const updatedQuantity = existingPart.quantity + newPart.quantity
+                await updatePart(existingPart.id, {
+                    name: existingPart.name,
+                    type: existingPart.type,
+                    quantity: updatedQuantity,
+                    series: existingPart.series || newPart.series, // Keep existing series or use new one if empty
+                    color: existingPart.color || newPart.color, // Keep existing color or use new one if empty
+                    notes: existingPart.notes || newPart.notes // Keep existing notes or use new one if empty
+                })
+
+                // Show success message with quantity update info
+                alert(`Updated "${newPart.name}" quantity from ${existingPart.quantity} to ${updatedQuantity} (+${newPart.quantity})`)
+            } else {
+                // Add as new part
+                await addPart(newPart)
+                alert(`Added new part: "${newPart.name}" (x${newPart.quantity})`)
+            }
+
             setNewPart({ name: '', type: 'blade' as PartType, quantity: 1, series: '', color: '', notes: '' })
             setShowAddForm(false)
             loadData() // Refresh data and stats
-            setSearchTerm('') // Clear search to show new part
+            setSearchTerm('') // Clear search to show updated/new part
             setFilterType('all')
             setCurrentPage(1) // Reset to first page
         } catch (error) {
-            console.error('Error adding part:', error)
+            console.error('Error adding/updating part:', error)
+            alert('Error adding part. Please try again.')
         }
     }
 
@@ -172,6 +230,14 @@ export default function Collection() {
         setEditingPart(null)
     }
 
+    const handleClearAllFilters = () => {
+        setSearchTerm('')
+        setFilterType('all')
+        setSortBy('name')
+        setSortOrder('asc')
+        setCurrentPage(1)
+    }
+
     if (loading) {
         return (
             <div className="min-h-screen flex flex-col">
@@ -220,10 +286,10 @@ export default function Collection() {
                                 </div>
                             </div>
 
-                            {/* Search and Filter Controls */}
+                            {/* Search, Filter, and Sort Controls */}
                             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                    <div className="sm:col-span-2">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    <div className="sm:col-span-2 lg:col-span-1">
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                             Search Parts
                                         </label>
@@ -251,6 +317,45 @@ export default function Collection() {
                                             <option value="bit">Bits</option>
                                         </select>
                                     </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                            Sort By
+                                        </label>
+                                        <select
+                                            value={sortBy}
+                                            onChange={(e) => setSortBy(e.target.value as any)}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        >
+                                            <option value="name">Name</option>
+                                            <option value="type">Type</option>
+                                            <option value="quantity">Quantity</option>
+                                            <option value="series">Series</option>
+                                            <option value="date_added">Date Added</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                            Sort Order
+                                        </label>
+                                        <select
+                                            value={sortOrder}
+                                            onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        >
+                                            <option value="asc">Ascending</option>
+                                            <option value="desc">Descending</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {/* Clear Filters Button */}
+                                <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
+                                    <button
+                                        onClick={handleClearAllFilters}
+                                        className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-md text-sm transition-colors dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                                    >
+                                        Clear All Filters & Sort
+                                    </button>
                                 </div>
                             </div>
 
@@ -271,6 +376,32 @@ export default function Collection() {
                             {showAddForm && (
                                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 mb-8">
                                     <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Add New Part</h3>
+
+                                    {/* Existing Part Detection */}
+                                    {(() => {
+                                        const existingPart = parts.find(
+                                            part => part.name.toLowerCase() === newPart.name.toLowerCase() &&
+                                                part.type === newPart.type &&
+                                                newPart.name.trim() !== ''
+                                        )
+
+                                        if (existingPart) {
+                                            return (
+                                                <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                                                    <div className="flex items-center gap-2 text-blue-800 dark:text-blue-300">
+                                                        <span className="text-lg">ℹ️</span>
+                                                        <span className="font-medium">Existing Part Found</span>
+                                                    </div>
+                                                    <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
+                                                        You already have "{existingPart.name}" (x{existingPart.quantity}).
+                                                        Adding this will increase the quantity to x{existingPart.quantity + newPart.quantity}.
+                                                    </p>
+                                                </div>
+                                            )
+                                        }
+                                        return null
+                                    })()}
+
                                     <form onSubmit={handleAddPart} className="space-y-4">
                                         <div className="grid md:grid-cols-2 gap-4">
                                             <div>
