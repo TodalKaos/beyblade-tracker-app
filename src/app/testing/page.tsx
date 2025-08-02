@@ -798,7 +798,7 @@ export default function Testing() {
                                                     <div className="text-2xl mb-2">🏆</div>
                                                     <h4 className="font-semibold text-gray-900 dark:text-white">Best of X Rounds</h4>
                                                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                                        First to 3 points wins each round
+                                                        First to 4 points wins each round
                                                     </p>
                                                     {battleMode === 'rounds' && (
                                                         <div className="mt-2">
