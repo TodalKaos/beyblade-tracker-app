@@ -415,51 +415,77 @@ export default function Testing() {
 
         let newScore1 = combo1Score
         let newScore2 = combo2Score
+        const newFinish = { type: finishType, points }
 
         if (comboNumber === 1) {
             newScore1 = combo1Score + points
             setCombo1Score(newScore1)
             // Track finish for all battle modes
-            setCombo1Finishes(prev => [...prev, { type: finishType, points }])
+            setCombo1Finishes(prev => [...prev, newFinish])
         } else {
             newScore2 = combo2Score + points
             setCombo2Score(newScore2)
             // Track finish for all battle modes
-            setCombo2Finishes(prev => [...prev, { type: finishType, points }])
+            setCombo2Finishes(prev => [...prev, newFinish])
         }
 
         // Check for battle completion based on mode
-        setTimeout(() => {
-            checkBattleCompletion(newScore1, newScore2)
-        }, 100)
+        checkBattleCompletion(newScore1, newScore2, comboNumber, newFinish)
     }
 
-    const checkBattleCompletion = (score1: number, score2: number) => {
+    const checkBattleCompletion = (score1: number, score2: number, comboNumber: 1 | 2, newFinish: { type: FinishType, points: number }) => {
         if (battleMode === 'timed') {
             // First to target score wins
             if (score1 >= targetScore || score2 >= targetScore) {
-                finishRound(score1, score2)
+                // Use setTimeout to ensure state updates are processed first
+                setTimeout(() => finishRound(score1, score2, comboNumber, newFinish), 0)
             }
         } else if (battleMode === 'rounds') {
             // First to 4 points wins a round
             if (score1 >= 4 || score2 >= 4) {
-                finishRound(score1, score2)
+                // Use setTimeout to ensure state updates are processed first
+                setTimeout(() => finishRound(score1, score2, comboNumber, newFinish), 0)
             }
         }
         // Standard mode doesn't auto-complete
     }
 
-    const finishRound = (score1: number, score2: number) => {
+    const finishRound = (score1: number, score2: number, comboNumber?: 1 | 2, newFinish?: { type: FinishType, points: number }) => {
         const roundWinner = score1 > score2 ? 1 : score2 > score1 ? 2 : null
 
-        // Add to round history with actual finish data
+        // Capture current finishes before any state changes
+        let capturedCombo1Finishes = [...combo1Finishes]
+        let capturedCombo2Finishes = [...combo2Finishes]
+
+        // If this is an auto-completion (comboNumber and newFinish provided), add the triggering finish
+        if (comboNumber && newFinish) {
+            if (comboNumber === 1) {
+                capturedCombo1Finishes.push(newFinish)
+            } else {
+                capturedCombo2Finishes.push(newFinish)
+            }
+        }
+
+        // Debug logging
+        console.log('finishRound called:', {
+            round: currentRound,
+            score1,
+            score2,
+            capturedCombo1Finishes: capturedCombo1Finishes.length,
+            capturedCombo2Finishes: capturedCombo2Finishes.length,
+            autoComplete: !!comboNumber,
+            triggeringCombo: comboNumber,
+            triggeringFinish: newFinish?.type
+        })
+
+        // Add to round history with captured finish data
         setRoundHistory(prev => [...prev, {
             round: currentRound,
             winner: roundWinner,
             score1,
             score2,
-            combo1Finishes: [...combo1Finishes], // Capture current finishes
-            combo2Finishes: [...combo2Finishes]  // Capture current finishes
+            combo1Finishes: capturedCombo1Finishes,
+            combo2Finishes: capturedCombo2Finishes
         }])
 
         if (battleMode === 'rounds') {
@@ -528,16 +554,24 @@ export default function Testing() {
                     allCombo2Finishes.push(...round.combo2Finishes)
                 })
 
-                // Add current round finishes if there are any remaining (for incomplete rounds)
-                // Note: finishRound already captures the round when it completes
-                if (combo1Finishes.length > 0 || combo2Finishes.length > 0) {
-                    // Only add if this round hasn't been captured yet (no matching round in history)
-                    const currentRoundExists = roundHistory.some(round => round.round === currentRound)
-                    if (!currentRoundExists) {
-                        allCombo1Finishes.push(...combo1Finishes)
-                        allCombo2Finishes.push(...combo2Finishes)
-                    }
+                // Only add current round finishes if battle is NOT complete
+                // (if battle is complete, all finishes should already be in roundHistory)
+                if (!battleComplete && (combo1Finishes.length > 0 || combo2Finishes.length > 0)) {
+                    allCombo1Finishes.push(...combo1Finishes)
+                    allCombo2Finishes.push(...combo2Finishes)
                 }
+
+                // Debug logging to help troubleshoot
+                console.log('Rounds mode save debug:', {
+                    currentRound,
+                    roundHistoryLength: roundHistory.length,
+                    currentCombo1Finishes: combo1Finishes.length,
+                    currentCombo2Finishes: combo2Finishes.length,
+                    totalCombo1Finishes: allCombo1Finishes.length,
+                    totalCombo2Finishes: allCombo2Finishes.length,
+                    battleComplete,
+                    roundHistory: roundHistory.map(r => ({ round: r.round, c1: r.combo1Finishes.length, c2: r.combo2Finishes.length }))
+                })
             }
 
             const battleData: TestBattleCreate = {
@@ -1197,8 +1231,8 @@ export default function Testing() {
 
                                                                             {/* Battle Mode Badge */}
                                                                             <div className={`px-2 py-1 rounded text-xs font-medium ${battleDetails.mode === 'rounds' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' :
-                                                                                    battleDetails.mode === 'timed' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300' :
-                                                                                        'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+                                                                                battleDetails.mode === 'timed' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300' :
+                                                                                    'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
                                                                                 }`}>
                                                                                 {battleDetails.mode === 'rounds' ? '🏆 Rounds' :
                                                                                     battleDetails.mode === 'timed' ? '⏱️ Timed' :
