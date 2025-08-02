@@ -454,8 +454,8 @@ export default function Testing() {
         const roundWinner = score1 > score2 ? 1 : score2 > score1 ? 2 : null
 
         // Capture current finishes before any state changes
-        let capturedCombo1Finishes = [...combo1Finishes]
-        let capturedCombo2Finishes = [...combo2Finishes]
+        const capturedCombo1Finishes = [...combo1Finishes]
+        const capturedCombo2Finishes = [...combo2Finishes]
 
         // If this is an auto-completion (comboNumber and newFinish provided), add the triggering finish
         if (comboNumber && newFinish) {
