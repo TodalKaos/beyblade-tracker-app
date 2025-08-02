@@ -7,6 +7,28 @@ import ProtectedRoute from '@/components/ProtectedRoute'
 import { getAllCombos, addTestBattle, getComboTestStats, getAllTestBattles, updateTestBattle, deleteTestBattle } from '@/services/database'
 import type { ComboWithParts, FinishType, ComboTestStats, TestBattleCreate, TestBattleWithCombos } from '@/types/beyblade'
 
+// Types for battle details
+interface BattleRoundHistory {
+    round: number
+    winner: number | null
+    score1: number
+    score2: number
+    combo1Finishes?: Array<{ type: FinishType, count: number }>
+    combo2Finishes?: Array<{ type: FinishType, count: number }>
+}
+
+interface BattleDetails {
+    mode: 'standard' | 'timed' | 'rounds'
+    legacy?: boolean
+    maxRounds?: number
+    targetScore?: number
+    finalScore1?: number
+    finalScore2?: number
+    roundHistory?: BattleRoundHistory[]
+    combo1Finishes?: Array<{ type: FinishType, points: number }>
+    combo2Finishes?: Array<{ type: FinishType, points: number }>
+}
+
 export default function Testing() {
     const [combos, setCombos] = useState<ComboWithParts[]>([])
     const [loading, setLoading] = useState(true)
@@ -16,6 +38,7 @@ export default function Testing() {
     // Battle History state
     const [battleHistory, setBattleHistory] = useState<TestBattleWithCombos[]>([])
     const [showHistory, setShowHistory] = useState(false)
+    const [expandedBattles, setExpandedBattles] = useState<Set<number>>(new Set())
     const [historyFilter, setHistoryFilter] = useState({
         combo: 'all',
         outcome: 'all', // 'all', 'wins', 'losses', 'ties'
@@ -33,19 +56,6 @@ export default function Testing() {
         notes: ''
     })
 
-    // Analytics state
-    const [showAnalytics, setShowAnalytics] = useState(false)
-
-    // 🚀 PHASE 3C: Smart Recommendations & Tournament Integration state
-    const [showRecommendations, setShowRecommendations] = useState(false)
-    // const [practiceGoals, setPracticeGoals] = useState<Array<{
-    //     id: string
-    //     type: 'winStreak' | 'winRate' | 'beatSpecific' | 'tournament'
-    //     target: number | string
-    //     current: number
-    //     completed: boolean
-    //     combo?: ComboWithParts
-    // }>>([])
     // Battle setup state
     const [selectedCombo1, setSelectedCombo1] = useState<ComboWithParts | null>(null)
     const [selectedCombo2, setSelectedCombo2] = useState<ComboWithParts | null>(null)
@@ -56,6 +66,10 @@ export default function Testing() {
     const [combo2Score, setCombo2Score] = useState(0)
     const [saving, setSaving] = useState(false)
 
+    // Finish tracking for standard mode
+    const [combo1Finishes, setCombo1Finishes] = useState<Array<{ type: FinishType, points: number }>>([])
+    const [combo2Finishes, setCombo2Finishes] = useState<Array<{ type: FinishType, points: number }>>([])
+
     // Advanced Battle Features state
     const [battleMode, setBattleMode] = useState<'standard' | 'timed' | 'rounds'>('standard')
     const [targetScore, setTargetScore] = useState(5) // For timed battles
@@ -63,7 +77,14 @@ export default function Testing() {
     const [maxRounds, setMaxRounds] = useState(3) // Best of 3
     const [combo1Rounds, setCombo1Rounds] = useState(0)
     const [combo2Rounds, setCombo2Rounds] = useState(0)
-    const [roundHistory, setRoundHistory] = useState<Array<{ round: number, winner: number | null, score1: number, score2: number }>>([])
+    const [roundHistory, setRoundHistory] = useState<Array<{
+        round: number,
+        winner: number | null,
+        score1: number,
+        score2: number,
+        combo1Finishes: Array<{ type: FinishType, points: number }>,
+        combo2Finishes: Array<{ type: FinishType, points: number }>
+    }>>([])
     const [battleComplete, setBattleComplete] = useState(false)
 
     useEffect(() => {
@@ -144,330 +165,7 @@ export default function Testing() {
         })
     }
 
-    // 🔥 PHASE 3B: ADVANCED ANALYTICS FUNCTIONS 🔥
-
-    // Win Streak Tracking
-    const getWinStreaks = () => {
-        const streaks: { [comboId: number]: { current: number, longest: number, combo: ComboWithParts } } = {}
-
-        // Sort battles by date to track chronological streaks
-        const sortedBattles = [...battleHistory].sort((a, b) =>
-            new Date(a.battle_date).getTime() - new Date(b.battle_date).getTime()
-        )
-
-        combos.forEach(combo => {
-            streaks[combo.id] = { current: 0, longest: 0, combo }
-        })
-
-        sortedBattles.forEach(battle => {
-            if (battle.winner_combo_id) {
-                // Winner gets streak extended
-                streaks[battle.winner_combo_id].current++
-                streaks[battle.winner_combo_id].longest = Math.max(
-                    streaks[battle.winner_combo_id].longest,
-                    streaks[battle.winner_combo_id].current
-                )
-
-                // Loser gets streak reset
-                const loserId = battle.combo1_id === battle.winner_combo_id ? battle.combo2_id : battle.combo1_id
-                streaks[loserId].current = 0
-            } else {
-                // Tie resets both streaks
-                streaks[battle.combo1_id].current = 0
-                streaks[battle.combo2_id].current = 0
-            }
-        })
-
-        return Object.values(streaks).sort((a, b) => b.current - a.current)
-    }
-
-    // Performance Trends (last 10 battles)
-    const getPerformanceTrends = () => {
-        const trends: { [comboId: number]: { wins: number[], winRate: number, trend: string, combo: ComboWithParts } } = {}
-
-        combos.forEach(combo => {
-            const comboHistory = battleHistory
-                .filter(battle => battle.combo1_id === combo.id || battle.combo2_id === combo.id)
-                .sort((a, b) => new Date(b.battle_date).getTime() - new Date(a.battle_date).getTime())
-                .slice(0, 10) // Last 10 battles
-
-            const wins = comboHistory.map(battle => battle.winner_combo_id === combo.id ? 1 : 0)
-            const winRate = wins.length > 0 ? (wins.reduce((a: number, b: number) => a + b, 0) / wins.length) * 100 : 0
-
-            let trend = 'stable'
-            if (wins.length >= 5) {
-                const recent = wins.slice(0, 5).reduce((a: number, b: number) => a + b, 0) / 5
-                const older = wins.slice(5).reduce((a: number, b: number) => a + b, 0) / (wins.length - 5)
-                if (recent > older + 0.2) trend = 'improving'
-                else if (recent < older - 0.2) trend = 'declining'
-            }
-
-            trends[combo.id] = { wins, winRate, trend, combo }
-        })
-
-        return Object.values(trends).sort((a, b) => b.winRate - a.winRate)
-    }
-
-    // Head-to-head Analysis
-    const getHeadToHeadStats = () => {
-        const h2h: { [key: string]: { combo1: ComboWithParts, combo2: ComboWithParts, battles: number, combo1Wins: number, combo2Wins: number, ties: number } } = {}
-
-        battleHistory.forEach(battle => {
-            const key = `${Math.min(battle.combo1_id, battle.combo2_id)}-${Math.max(battle.combo1_id, battle.combo2_id)}`
-
-            if (!h2h[key]) {
-                const combo1 = combos.find(c => c.id === Math.min(battle.combo1_id, battle.combo2_id))!
-                const combo2 = combos.find(c => c.id === Math.max(battle.combo1_id, battle.combo2_id))!
-                h2h[key] = { combo1, combo2, battles: 0, combo1Wins: 0, combo2Wins: 0, ties: 0 }
-            }
-
-            h2h[key].battles++
-
-            if (battle.winner_combo_id === null) {
-                h2h[key].ties++
-            } else if (battle.winner_combo_id === Math.min(battle.combo1_id, battle.combo2_id)) {
-                h2h[key].combo1Wins++
-            } else {
-                h2h[key].combo2Wins++
-            }
-        })
-
-        return Object.values(h2h).filter(stat => stat.battles >= 2).sort((a, b) => b.battles - a.battles)
-    }
-
-    // Weakness/Strength Matrix
-    const getStrengthWeaknessMatrix = () => {
-        const matrix: { [comboId: number]: { combo: ComboWithParts, strengths: ComboWithParts[], weaknesses: ComboWithParts[], dominance: number } } = {}
-
-        combos.forEach(combo => {
-            const opponents: { [oppId: number]: { wins: number, losses: number, combo: ComboWithParts } } = {}
-
-            battleHistory.forEach(battle => {
-                const isCombo1 = battle.combo1_id === combo.id
-                const isCombo2 = battle.combo2_id === combo.id
-
-                if (isCombo1 || isCombo2) {
-                    const oppId = isCombo1 ? battle.combo2_id : battle.combo1_id
-                    const oppCombo = combos.find(c => c.id === oppId)!
-
-                    if (!opponents[oppId]) {
-                        opponents[oppId] = { wins: 0, losses: 0, combo: oppCombo }
-                    }
-
-                    if (battle.winner_combo_id === combo.id) {
-                        opponents[oppId].wins++
-                    } else if (battle.winner_combo_id === oppId) {
-                        opponents[oppId].losses++
-                    }
-                }
-            })
-
-            const strengths = Object.values(opponents)
-                .filter(opp => opp.wins + opp.losses >= 2 && opp.wins > opp.losses)
-                .map(opp => opp.combo)
-
-            const weaknesses = Object.values(opponents)
-                .filter(opp => opp.wins + opp.losses >= 2 && opp.losses > opp.wins)
-                .map(opp => opp.combo)
-
-            const totalWins = Object.values(opponents).reduce((sum, opp) => sum + opp.wins, 0)
-            const totalLosses = Object.values(opponents).reduce((sum, opp) => sum + opp.losses, 0)
-            const dominance = totalWins + totalLosses > 0 ? (totalWins / (totalWins + totalLosses)) * 100 : 0
-
-            matrix[combo.id] = { combo, strengths, weaknesses, dominance }
-        })
-
-        return Object.values(matrix).sort((a, b) => b.dominance - a.dominance)
-    }
-
-    // 🚀 PHASE 3C: SMART RECOMMENDATIONS & TOURNAMENT INTEGRATION FUNCTIONS 🚀
-
-    // AI-Powered Combo Recommendations
-    const getSmartRecommendations = () => {
-        const recommendations: Array<{
-            type: 'topPerformer' | 'underrated' | 'counter' | 'experimental' | 'balanced'
-            combo: ComboWithParts
-            reason: string
-            confidence: number
-            stats?: { wins: number[], winRate: number, trend: string, combo: ComboWithParts }
-        }> = []
-
-        const trends = getPerformanceTrends()
-        // const streaks = getWinStreaks() // Currently unused in recommendations logic
-        const matrix = getStrengthWeaknessMatrix()
-
-        // Top Performer Recommendations
-        const topPerformers = trends.filter(t => t.winRate >= 70).slice(0, 2)
-        topPerformers.forEach(performer => {
-            recommendations.push({
-                type: 'topPerformer',
-                combo: performer.combo,
-                reason: `Dominating with ${performer.winRate.toFixed(1)}% win rate and ${performer.trend} trend`,
-                confidence: Math.min(95, performer.winRate + 10),
-                stats: performer
-            })
-        })
-
-        // Underrated Gems (good performance but low usage)
-        const underratedCombos = combos.filter(combo => {
-            const comboTrend = trends.find(t => t.combo.id === combo.id)
-            const comboBattles = battleHistory.filter(b => b.combo1_id === combo.id || b.combo2_id === combo.id).length
-            return comboTrend && comboTrend.winRate >= 60 && comboBattles < 5
-        }).slice(0, 2)
-
-        underratedCombos.forEach(combo => {
-            const trend = trends.find(t => t.combo.id === combo.id)!
-            recommendations.push({
-                type: 'underrated',
-                combo,
-                reason: `Hidden gem with ${trend.winRate.toFixed(1)}% win rate but only ${battleHistory.filter(b => b.combo1_id === combo.id || b.combo2_id === combo.id).length} battles tested`,
-                confidence: trend.winRate,
-                stats: trend
-            })
-        })
-
-        // Counter Recommendations (based on recent losses)
-        const recentLosers = battleHistory
-            .sort((a, b) => new Date(b.battle_date).getTime() - new Date(a.battle_date).getTime())
-            .slice(0, 10)
-            .filter(battle => battle.winner_combo_id !== null)
-
-        if (recentLosers.length > 0) {
-            const lostToCombos = recentLosers.map(battle => battle.winner_combo_id!).filter(Boolean)
-            const mostTroublesome = lostToCombos.reduce((acc, comboId) => {
-                acc[comboId] = (acc[comboId] || 0) + 1
-                return acc
-            }, {} as { [key: number]: number })
-
-            const biggestThreat = Object.entries(mostTroublesome)
-                .sort(([, a], [, b]) => b - a)[0]
-
-            if (biggestThreat) {
-                const threatCombo = combos.find(c => c.id === parseInt(biggestThreat[0]))
-                const counters = matrix.find(m => m.combo.id === parseInt(biggestThreat[0]))?.weaknesses || []
-
-                if (threatCombo && counters.length > 0) {
-                    recommendations.push({
-                        type: 'counter',
-                        combo: counters[0],
-                        reason: `Perfect counter to ${threatCombo.name} which has been dominating recent battles`,
-                        confidence: 85
-                    })
-                }
-            }
-        }
-
-        // Experimental Recommendations (least tested combos with potential)
-        const experimentalCombos = combos.filter(combo => {
-            const battles = battleHistory.filter(b => b.combo1_id === combo.id || b.combo2_id === combo.id).length
-            return battles < 3
-        }).slice(0, 2)
-
-        experimentalCombos.forEach(combo => {
-            recommendations.push({
-                type: 'experimental',
-                combo,
-                reason: 'Untested combo with high potential - perfect for experimentation',
-                confidence: 50
-            })
-        })
-
-        // Balanced Team Recommendations (for tournament decks)
-        const balanced = trends.filter(t => t.winRate >= 50 && t.winRate <= 75).slice(0, 2)
-        balanced.forEach(performer => {
-            recommendations.push({
-                type: 'balanced',
-                combo: performer.combo,
-                reason: `Solid and reliable with ${performer.winRate.toFixed(1)}% win rate - great for tournament decks`,
-                confidence: performer.winRate,
-                stats: performer
-            })
-        })
-
-        return recommendations.slice(0, 6) // Top 6 recommendations
-    }
-
-    // Tournament Deck Builder with Part Uniqueness Validation
-    // This section has been moved to the dedicated tournaments page with enhanced features.
-    // Generate practice goals for improving performance
-    const generatePracticeGoals = () => {
-        const streaks = getWinStreaks()
-        const trends = getPerformanceTrends()
-        const goals: Array<{
-            id: string
-            type: 'winStreak' | 'winRate' | 'beatSpecific' | 'tournament'
-            target: number | string
-            current: number
-            completed: boolean
-            combo?: ComboWithParts
-            description: string
-        }> = []
-
-        // Win Streak Goals
-        const topStreaker = streaks[0]
-        if (topStreaker && topStreaker.current < 5) {
-            goals.push({
-                id: `streak-${topStreaker.combo.id}`,
-                type: 'winStreak',
-                target: topStreaker.current + 3,
-                current: topStreaker.current,
-                completed: false,
-                combo: topStreaker.combo,
-                description: `Achieve a ${topStreaker.current + 3} win streak with ${topStreaker.combo.name}`
-            })
-        }
-
-        // Win Rate Goals
-        const improvableCombos = trends.filter(t => t.winRate < 70 && t.winRate > 30)
-        if (improvableCombos.length > 0) {
-            const target = improvableCombos[0]
-            goals.push({
-                id: `winrate-${target.combo.id}`,
-                type: 'winRate',
-                target: Math.ceil(target.winRate / 10) * 10 + 10, // Round up to next 10%
-                current: Math.round(target.winRate),
-                completed: false,
-                combo: target.combo,
-                description: `Improve ${target.combo.name}'s win rate to ${Math.ceil(target.winRate / 10) * 10 + 10}%`
-            })
-        }
-
-        // Beat Specific Opponent Goals
-        const matrix = getStrengthWeaknessMatrix()
-        const comboWithWeaknesses = matrix.find(m => m.weaknesses.length > 0)
-        if (comboWithWeaknesses && comboWithWeaknesses.weaknesses.length > 0) {
-            goals.push({
-                id: `beat-${comboWithWeaknesses.combo.id}-${comboWithWeaknesses.weaknesses[0].id}`,
-                type: 'beatSpecific',
-                target: comboWithWeaknesses.weaknesses[0].name,
-                current: 0,
-                completed: false,
-                combo: comboWithWeaknesses.combo,
-                description: `Train ${comboWithWeaknesses.combo.name} to beat ${comboWithWeaknesses.weaknesses[0].name}`
-            })
-        }
-
-        // Tournament Preparation Goal
-        goals.push({
-            id: 'tournament-prep',
-            type: 'tournament',
-            target: 'Ready for tournament',
-            current: Math.min(trends.filter(t => t.winRate >= 60).length, 3),
-            completed: trends.filter(t => t.winRate >= 60).length >= 3,
-            description: 'Have 3 combos with 60%+ win rate ready for tournament'
-        })
-
-        return goals
-    }
-
-    // Promote Battle to Tournament
-    // const promoteBattleToTournament = (battle: TestBattleWithCombos) => {
-    //     // This would integrate with the tournament system
-    //     console.log('Promoting battle to tournament:', battle)
-    //     // Implementation would depend on tournament system structure
-    // }
-
-    // 🔧 Edit Battle Functions
+    //  Edit Battle Functions
     const openEditBattle = (battle: TestBattleWithCombos) => {
         setEditingBattle(battle)
         setEditBattleData({
@@ -539,6 +237,142 @@ export default function Testing() {
         return parts.length > 0 ? parts.join(' + ') : combo.name
     }
 
+    // Helper function to estimate finish types from total score (used for legacy battles)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const getFinishTypesFromScore = (totalScore: number): Array<{ type: FinishType, count: number }> => {
+        const finishes: Array<{ type: FinishType, count: number }> = []
+        let remainingScore = totalScore
+
+        if (remainingScore === 0) {
+            return []
+        }
+
+        // This is a simplified estimation since we don't track individual finish types during battle
+        // We'll distribute points in a reasonable way: prioritize common finishes
+
+        // For efficiency, assume burst finishes are most common for 2+ point scores
+        if (remainingScore >= 2) {
+            const burstCount = Math.floor(remainingScore / 2)
+            if (burstCount > 0) {
+                finishes.push({ type: 'burst', count: burstCount })
+                remainingScore -= burstCount * 2
+            }
+        }
+
+        // Any remaining single points are spin finishes
+        if (remainingScore >= 1) {
+            finishes.push({ type: 'spin', count: remainingScore })
+        }
+
+        return finishes
+    }
+
+    // Helper function to parse battle details from notes
+    const parseBattleDetails = (battle: TestBattleWithCombos): BattleDetails => {
+        try {
+            if (battle.notes && battle.notes.startsWith('{')) {
+                return JSON.parse(battle.notes) as BattleDetails
+            }
+        } catch (error) {
+            console.warn('Failed to parse battle notes:', error)
+        }
+
+        // Fallback for legacy battles
+        if (battle.notes?.includes('Best of')) {
+            return {
+                mode: 'rounds',
+                legacy: true,
+                maxRounds: battle.notes.includes('Best of 3') ? 3 :
+                    battle.notes.includes('Best of 5') ? 5 :
+                        battle.notes.includes('Best of 7') ? 7 : 3
+            }
+        }
+
+        return {
+            mode: 'standard',
+            legacy: true
+        }
+    }
+
+    // Helper function to convert tracked finishes to count format for display
+    const convertFinishesToCounts = (finishes: Array<{ type: FinishType, points: number }>): Array<{ type: FinishType, count: number }> => {
+        const counts: { [key in FinishType]?: number } = {}
+
+        finishes.forEach(finish => {
+            counts[finish.type] = (counts[finish.type] || 0) + 1
+        })
+
+        return Object.entries(counts).map(([type, count]) => ({
+            type: type as FinishType,
+            count: count as number
+        }))
+    }
+
+    // Helper function to calculate best and worst matchups for a combo
+    const getMatchupStats = (comboId: number) => {
+        const opponents: { [oppId: number]: { wins: number, losses: number, combo: ComboWithParts } } = {}
+
+        // Get all battles for this combo
+        battleHistory.forEach(battle => {
+            const isCombo1 = battle.combo1_id === comboId
+            const isCombo2 = battle.combo2_id === comboId
+
+            if (isCombo1 || isCombo2) {
+                const oppId = isCombo1 ? battle.combo2_id : battle.combo1_id
+                const oppCombo = combos.find(c => c.id === oppId)
+
+                if (oppCombo) {
+                    if (!opponents[oppId]) {
+                        opponents[oppId] = { wins: 0, losses: 0, combo: oppCombo }
+                    }
+
+                    if (battle.winner_combo_id === comboId) {
+                        opponents[oppId].wins++
+                    } else if (battle.winner_combo_id === oppId) {
+                        opponents[oppId].losses++
+                    }
+                    // Ties don't count toward either
+                }
+            }
+        })
+
+        // Calculate win rates for opponents with at least 2 battles
+        const validOpponents = Object.values(opponents)
+            .filter(opp => opp.wins + opp.losses >= 2)
+            .map(opp => ({
+                combo: opp.combo,
+                winRate: opp.wins / (opp.wins + opp.losses),
+                battles: opp.wins + opp.losses
+            }))
+
+        const bestMatchup = validOpponents.length > 0
+            ? validOpponents.reduce((best, current) =>
+                current.winRate > best.winRate ? current : best
+            )
+            : null
+
+        const worstMatchup = validOpponents.length > 0
+            ? validOpponents.reduce((worst, current) =>
+                current.winRate < worst.winRate ? current : worst
+            )
+            : null
+
+        return { bestMatchup, worstMatchup }
+    }
+
+    // Helper function to toggle battle expansion
+    const toggleBattleExpansion = (battleId: number) => {
+        setExpandedBattles(prev => {
+            const newSet = new Set(prev)
+            if (newSet.has(battleId)) {
+                newSet.delete(battleId)
+            } else {
+                newSet.add(battleId)
+            }
+            return newSet
+        })
+    }
+
     const startBattle = () => {
         if (selectedCombo1 && selectedCombo2 && selectedCombo1.id !== selectedCombo2.id) {
             setBattleStarted(true)
@@ -549,6 +383,8 @@ export default function Testing() {
             setCombo2Rounds(0)
             setRoundHistory([])
             setBattleComplete(false)
+            setCombo1Finishes([])
+            setCombo2Finishes([])
         }
     }
 
@@ -563,6 +399,8 @@ export default function Testing() {
         setCombo2Rounds(0)
         setRoundHistory([])
         setBattleComplete(false)
+        setCombo1Finishes([])
+        setCombo2Finishes([])
     }
 
     const addPoints = (comboNumber: 1 | 2, finishType: FinishType) => {
@@ -581,9 +419,13 @@ export default function Testing() {
         if (comboNumber === 1) {
             newScore1 = combo1Score + points
             setCombo1Score(newScore1)
+            // Track finish for all battle modes
+            setCombo1Finishes(prev => [...prev, { type: finishType, points }])
         } else {
             newScore2 = combo2Score + points
             setCombo2Score(newScore2)
+            // Track finish for all battle modes
+            setCombo2Finishes(prev => [...prev, { type: finishType, points }])
         }
 
         // Check for battle completion based on mode
@@ -610,12 +452,14 @@ export default function Testing() {
     const finishRound = (score1: number, score2: number) => {
         const roundWinner = score1 > score2 ? 1 : score2 > score1 ? 2 : null
 
-        // Add to round history
+        // Add to round history with actual finish data
         setRoundHistory(prev => [...prev, {
             round: currentRound,
             winner: roundWinner,
             score1,
-            score2
+            score2,
+            combo1Finishes: [...combo1Finishes], // Capture current finishes
+            combo2Finishes: [...combo2Finishes]  // Capture current finishes
         }])
 
         if (battleMode === 'rounds') {
@@ -634,10 +478,12 @@ export default function Testing() {
             if (newCombo1Rounds >= roundsToWin || newCombo2Rounds >= roundsToWin || currentRound >= maxRounds) {
                 setBattleComplete(true)
             } else {
-                // Start next round
+                // Start next round - reset scores and finishes
                 setCurrentRound(prev => prev + 1)
                 setCombo1Score(0)
                 setCombo2Score(0)
+                setCombo1Finishes([]) // Reset finishes for new round
+                setCombo2Finishes([]) // Reset finishes for new round
             }
         } else if (battleMode === 'timed') {
             setBattleComplete(true)
@@ -668,6 +514,32 @@ export default function Testing() {
                 winnerId = selectedCombo2.id
             }
 
+            // For rounds mode, accumulate all finishes from all rounds
+            let allCombo1Finishes = combo1Finishes
+            let allCombo2Finishes = combo2Finishes
+
+            if (battleMode === 'rounds') {
+                allCombo1Finishes = []
+                allCombo2Finishes = []
+
+                // Accumulate finishes from all completed rounds
+                roundHistory.forEach(round => {
+                    allCombo1Finishes.push(...round.combo1Finishes)
+                    allCombo2Finishes.push(...round.combo2Finishes)
+                })
+
+                // Add current round finishes if there are any remaining (for incomplete rounds)
+                // Note: finishRound already captures the round when it completes
+                if (combo1Finishes.length > 0 || combo2Finishes.length > 0) {
+                    // Only add if this round hasn't been captured yet (no matching round in history)
+                    const currentRoundExists = roundHistory.some(round => round.round === currentRound)
+                    if (!currentRoundExists) {
+                        allCombo1Finishes.push(...combo1Finishes)
+                        allCombo2Finishes.push(...combo2Finishes)
+                    }
+                }
+            }
+
             const battleData: TestBattleCreate = {
                 combo1_id: selectedCombo1.id,
                 combo2_id: selectedCombo2.id,
@@ -675,7 +547,39 @@ export default function Testing() {
                 combo2_score: finalScore2,
                 winner_combo_id: winnerId,
                 battle_date: new Date().toISOString().split('T')[0],
-                notes: battleMode === 'rounds' ? `Best of ${maxRounds} series` : ''
+                notes: battleMode === 'rounds'
+                    ? JSON.stringify({
+                        mode: 'rounds',
+                        maxRounds,
+                        roundHistory: roundHistory.map(round => ({
+                            round: round.round,
+                            winner: round.winner,
+                            score1: round.score1,
+                            score2: round.score2,
+                            // Use actual tracked finishes converted to count format
+                            combo1Finishes: convertFinishesToCounts(round.combo1Finishes),
+                            combo2Finishes: convertFinishesToCounts(round.combo2Finishes)
+                        })),
+                        // Add total finishes across all rounds for summary display
+                        combo1Finishes: allCombo1Finishes,
+                        combo2Finishes: allCombo2Finishes
+                    })
+                    : battleMode === 'timed'
+                        ? JSON.stringify({
+                            mode: 'timed',
+                            targetScore,
+                            finalScore1: combo1Score,
+                            finalScore2: combo2Score,
+                            combo1Finishes: combo1Finishes,
+                            combo2Finishes: combo2Finishes
+                        })
+                        : JSON.stringify({
+                            mode: 'standard',
+                            finalScore1: combo1Score,
+                            finalScore2: combo2Score,
+                            combo1Finishes: combo1Finishes,
+                            combo2Finishes: combo2Finishes
+                        })
             }
 
             await addTestBattle(battleData)
@@ -1247,88 +1151,403 @@ export default function Testing() {
                                             </p>
                                         ) : (
                                             <div className="space-y-4 max-h-96 overflow-y-auto">
-                                                {getFilteredBattleHistory().map((battle) => (
-                                                    <div key={battle.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
-                                                        <div className="flex flex-col md:flex-row md:items-center justify-between">
-                                                            {/* Battle Info */}
-                                                            <div className="flex-1">
-                                                                <div className="flex items-center gap-4 mb-2">
-                                                                    {/* Combo 1 */}
-                                                                    <div className="flex items-center gap-2">
-                                                                        <span className="text-blue-600 dark:text-blue-400 font-medium">
-                                                                            {battle.combo1.name}
-                                                                        </span>
-                                                                        <span className={`px-2 py-1 rounded text-sm font-bold ${battle.winner_combo_id === battle.combo1_id
-                                                                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                                                                            : battle.winner_combo_id === null
-                                                                                ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
-                                                                                : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
-                                                                            }`}>
-                                                                            {battle.combo1_score}
-                                                                        </span>
+                                                {getFilteredBattleHistory().map((battle) => {
+                                                    const battleDetails = parseBattleDetails(battle)
+                                                    const isExpanded = expandedBattles.has(battle.id)
+
+                                                    return (
+                                                        <div key={battle.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                                                            {/* Main Battle Info */}
+                                                            <div className="p-4">
+                                                                <div className="flex flex-col md:flex-row md:items-center justify-between">
+                                                                    {/* Battle Info */}
+                                                                    <div className="flex-1">
+                                                                        <div className="flex items-center gap-4 mb-2">
+                                                                            {/* Combo 1 */}
+                                                                            <div className="flex items-center gap-2">
+                                                                                <span className="text-blue-600 dark:text-blue-400 font-medium">
+                                                                                    {battle.combo1.name}
+                                                                                </span>
+                                                                                <span className={`px-2 py-1 rounded text-sm font-bold ${battle.winner_combo_id === battle.combo1_id
+                                                                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                                                                                    : battle.winner_combo_id === null
+                                                                                        ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
+                                                                                        : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                                                                                    }`}>
+                                                                                    {battle.combo1_score}
+                                                                                </span>
+                                                                            </div>
+
+                                                                            <span className="text-gray-400 font-bold">VS</span>
+
+                                                                            {/* Combo 2 */}
+                                                                            <div className="flex items-center gap-2">
+                                                                                <span className="text-red-600 dark:text-red-400 font-medium">
+                                                                                    {battle.combo2.name}
+                                                                                </span>
+                                                                                <span className={`px-2 py-1 rounded text-sm font-bold ${battle.winner_combo_id === battle.combo2_id
+                                                                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                                                                                    : battle.winner_combo_id === null
+                                                                                        ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
+                                                                                        : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                                                                                    }`}>
+                                                                                    {battle.combo2_score}
+                                                                                </span>
+                                                                            </div>
+
+                                                                            {/* Battle Mode Badge */}
+                                                                            <div className={`px-2 py-1 rounded text-xs font-medium ${battleDetails.mode === 'rounds' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' :
+                                                                                    battleDetails.mode === 'timed' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300' :
+                                                                                        'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+                                                                                }`}>
+                                                                                {battleDetails.mode === 'rounds' ? '🏆 Rounds' :
+                                                                                    battleDetails.mode === 'timed' ? '⏱️ Timed' :
+                                                                                        '🛡️ Standard'}
+                                                                            </div>
+                                                                        </div>
+
+                                                                        {/* Winner and Mode Info */}
+                                                                        <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                                                                            {battle.winner_combo_id === null
+                                                                                ? "🤝 Tie Game"
+                                                                                : `🏆 Winner: ${battle.winner_combo_id === battle.combo1_id ? battle.combo1.name : battle.combo2.name}`
+                                                                            }
+                                                                            {battleDetails.mode === 'rounds' && !battleDetails.legacy && (
+                                                                                <span className="ml-4 text-purple-600 dark:text-purple-400">
+                                                                                    Best of {battleDetails.maxRounds}
+                                                                                </span>
+                                                                            )}
+                                                                            {battleDetails.mode === 'timed' && (
+                                                                                <span className="ml-4 text-orange-600 dark:text-orange-400">
+                                                                                    First to {battleDetails.targetScore} points
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+
+                                                                        {/* Expand/Collapse Button */}
+                                                                        {!battleDetails.legacy && (
+                                                                            <button
+                                                                                onClick={() => toggleBattleExpansion(battle.id)}
+                                                                                className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
+                                                                            >
+                                                                                {isExpanded ? '🔽 Hide Details' :
+                                                                                    battleDetails.mode === 'rounds' ? '▶️ Show Battle Details' :
+                                                                                        battleDetails.mode === 'standard' ? '▶️ Show Finish Details' :
+                                                                                            '▶️ Show Battle Details'}
+                                                                            </button>
+                                                                        )}
                                                                     </div>
 
-                                                                    <span className="text-gray-400 font-bold">VS</span>
-
-                                                                    {/* Combo 2 */}
-                                                                    <div className="flex items-center gap-2">
-                                                                        <span className="text-red-600 dark:text-red-400 font-medium">
-                                                                            {battle.combo2.name}
-                                                                        </span>
-                                                                        <span className={`px-2 py-1 rounded text-sm font-bold ${battle.winner_combo_id === battle.combo2_id
-                                                                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                                                                            : battle.winner_combo_id === null
-                                                                                ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
-                                                                                : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
-                                                                            }`}>
-                                                                            {battle.combo2_score}
-                                                                        </span>
+                                                                    {/* Date and Actions */}
+                                                                    <div className="flex items-center gap-4 mt-2 md:mt-0">
+                                                                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                                                                            {new Date(battle.battle_date).toLocaleDateString()}
+                                                                        </div>
+                                                                        <div className="flex gap-2">
+                                                                            <button
+                                                                                onClick={(e) => {
+                                                                                    e.preventDefault()
+                                                                                    e.stopPropagation()
+                                                                                    openEditBattle(battle)
+                                                                                }}
+                                                                                className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 p-1 rounded transition-colors"
+                                                                                title="Edit Battle"
+                                                                            >
+                                                                                ✏️
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={(e) => {
+                                                                                    e.preventDefault()
+                                                                                    e.stopPropagation()
+                                                                                    deleteBattle(battle.id)
+                                                                                }}
+                                                                                className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1 rounded transition-colors"
+                                                                                title="Delete Battle"
+                                                                                disabled={saving}
+                                                                            >
+                                                                                🗑️
+                                                                            </button>
+                                                                        </div>
                                                                     </div>
-                                                                </div>
-
-                                                                {/* Winner */}
-                                                                <div className="text-sm text-gray-600 dark:text-gray-400">
-                                                                    {battle.winner_combo_id === null
-                                                                        ? "🤝 Tie Game"
-                                                                        : `🏆 Winner: ${battle.winner_combo_id === battle.combo1_id ? battle.combo1.name : battle.combo2.name}`
-                                                                    }
                                                                 </div>
                                                             </div>
 
-                                                            {/* Date and Actions */}
-                                                            <div className="flex items-center gap-4 mt-2 md:mt-0">
-                                                                <div className="text-sm text-gray-500 dark:text-gray-400">
-                                                                    {new Date(battle.battle_date).toLocaleDateString()}
+                                                            {/* Expanded Rounds Mode Details */}
+                                                            {isExpanded && battleDetails.mode === 'rounds' && (
+                                                                <div className="border-t border-gray-200 dark:border-gray-600 p-4 bg-gray-100 dark:bg-gray-800">
+                                                                    <h5 className="font-medium text-gray-900 dark:text-white mb-3">
+                                                                        🏆 Battle Breakdown - Rounds Mode
+                                                                    </h5>
+                                                                    <div className="text-center mb-4">
+                                                                        <div className="inline-block bg-purple-100 dark:bg-purple-900/30 px-4 py-2 rounded-lg border border-purple-200 dark:border-purple-800">
+                                                                            <span className="text-purple-800 dark:text-purple-300 font-medium">
+                                                                                🎯 Best of {battleDetails.maxRounds || 'Unknown'} • Series: {battle.combo1.name} {battle.combo1_score} - {battle.combo2_score} {battle.combo2.name}
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="grid grid-cols-2 gap-6">
+                                                                        {/* Combo 1 Finishes */}
+                                                                        <div className="space-y-3">
+                                                                            <div className="font-medium text-blue-600 dark:text-blue-400 text-center">
+                                                                                🔵 {battle.combo1.name}
+                                                                            </div>
+                                                                            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 text-center">
+                                                                                {battle.combo1_score} Rounds Won
+                                                                            </div>
+                                                                            <div className="bg-white dark:bg-gray-700 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
+                                                                                <div className="text-sm font-medium text-gray-900 dark:text-white mb-2">
+                                                                                    Total Finish Breakdown:
+                                                                                </div>
+                                                                                {battleDetails.combo1Finishes && battleDetails.combo1Finishes.length > 0 ? (
+                                                                                    <div className="space-y-1">
+                                                                                        {battleDetails.combo1Finishes.map((finish, index) => (
+                                                                                            <div key={index} className="flex justify-between items-center text-sm">
+                                                                                                <span className="flex items-center gap-1">
+                                                                                                    {finish.type === 'spin' && '🟢 Spin Finish'}
+                                                                                                    {finish.type === 'over' && '🔵 Over Finish'}
+                                                                                                    {finish.type === 'burst' && '🟠 Burst Finish'}
+                                                                                                    {finish.type === 'xtreme' && '🟣 Xtreme Finish'}
+                                                                                                </span>
+                                                                                                <span className="font-medium text-gray-600 dark:text-gray-400">
+                                                                                                    +{finish.points} pts
+                                                                                                </span>
+                                                                                            </div>
+                                                                                        ))}
+                                                                                    </div>
+                                                                                ) : (
+                                                                                    <div className="text-sm text-gray-500 dark:text-gray-400 italic">
+                                                                                        No finishes recorded
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+
+                                                                        {/* Combo 2 Finishes */}
+                                                                        <div className="space-y-3">
+                                                                            <div className="font-medium text-red-600 dark:text-red-400 text-center">
+                                                                                🔴 {battle.combo2.name}
+                                                                            </div>
+                                                                            <div className="text-2xl font-bold text-red-600 dark:text-red-400 text-center">
+                                                                                {battle.combo2_score} Rounds Won
+                                                                            </div>
+                                                                            <div className="bg-white dark:bg-gray-700 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
+                                                                                <div className="text-sm font-medium text-gray-900 dark:text-white mb-2">
+                                                                                    Total Finish Breakdown:
+                                                                                </div>
+                                                                                {battleDetails.combo2Finishes && battleDetails.combo2Finishes.length > 0 ? (
+                                                                                    <div className="space-y-1">
+                                                                                        {battleDetails.combo2Finishes.map((finish, index) => (
+                                                                                            <div key={index} className="flex justify-between items-center text-sm">
+                                                                                                <span className="flex items-center gap-1">
+                                                                                                    {finish.type === 'spin' && '🟢 Spin Finish'}
+                                                                                                    {finish.type === 'over' && '🔵 Over Finish'}
+                                                                                                    {finish.type === 'burst' && '🟠 Burst Finish'}
+                                                                                                    {finish.type === 'xtreme' && '🟣 Xtreme Finish'}
+                                                                                                </span>
+                                                                                                <span className="font-medium text-gray-600 dark:text-gray-400">
+                                                                                                    +{finish.points} pts
+                                                                                                </span>
+                                                                                            </div>
+                                                                                        ))}
+                                                                                    </div>
+                                                                                ) : (
+                                                                                    <div className="text-sm text-gray-500 dark:text-gray-400 italic">
+                                                                                        No finishes recorded
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
                                                                 </div>
-                                                                <div className="flex gap-2">
-                                                                    <button
-                                                                        onClick={(e) => {
-                                                                            e.preventDefault()
-                                                                            e.stopPropagation()
-                                                                            openEditBattle(battle)
-                                                                        }}
-                                                                        className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 p-1 rounded transition-colors"
-                                                                        title="Edit Battle"
-                                                                    >
-                                                                        ✏️
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={(e) => {
-                                                                            e.preventDefault()
-                                                                            e.stopPropagation()
-                                                                            deleteBattle(battle.id)
-                                                                        }}
-                                                                        className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1 rounded transition-colors"
-                                                                        title="Delete Battle"
-                                                                        disabled={saving}
-                                                                    >
-                                                                        🗑️
-                                                                    </button>
+                                                            )}
+
+                                                            {/* Expanded Standard Mode Details */}
+                                                            {isExpanded && battleDetails.mode === 'standard' && (
+                                                                <div className="border-t border-gray-200 dark:border-gray-600 p-4 bg-gray-100 dark:bg-gray-800">
+                                                                    <h5 className="font-medium text-gray-900 dark:text-white mb-3">
+                                                                        🎯 Battle Breakdown - Standard Mode
+                                                                    </h5>
+                                                                    <div className="grid grid-cols-2 gap-6">
+                                                                        {/* Combo 1 Finishes */}
+                                                                        <div className="space-y-3">
+                                                                            <div className="font-medium text-blue-600 dark:text-blue-400 text-center">
+                                                                                🔵 {battle.combo1.name}
+                                                                            </div>
+                                                                            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 text-center">
+                                                                                {battle.combo1_score} Points
+                                                                            </div>
+                                                                            <div className="bg-white dark:bg-gray-700 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
+                                                                                <div className="text-sm font-medium text-gray-900 dark:text-white mb-2">
+                                                                                    Finish Breakdown:
+                                                                                </div>
+                                                                                {battleDetails.combo1Finishes && battleDetails.combo1Finishes.length > 0 ? (
+                                                                                    <div className="space-y-1">
+                                                                                        {battleDetails.combo1Finishes.map((finish, index) => (
+                                                                                            <div key={index} className="flex justify-between items-center text-sm">
+                                                                                                <span className="flex items-center gap-1">
+                                                                                                    {finish.type === 'spin' && '🟢 Spin Finish'}
+                                                                                                    {finish.type === 'over' && '🔵 Over Finish'}
+                                                                                                    {finish.type === 'burst' && '🟠 Burst Finish'}
+                                                                                                    {finish.type === 'xtreme' && '🟣 Xtreme Finish'}
+                                                                                                </span>
+                                                                                                <span className="font-medium text-gray-600 dark:text-gray-400">
+                                                                                                    +{finish.points} pts
+                                                                                                </span>
+                                                                                            </div>
+                                                                                        ))}
+                                                                                    </div>
+                                                                                ) : (
+                                                                                    <div className="text-sm text-gray-500 dark:text-gray-400 italic">
+                                                                                        No finishes recorded
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+
+                                                                        {/* Combo 2 Finishes */}
+                                                                        <div className="space-y-3">
+                                                                            <div className="font-medium text-red-600 dark:text-red-400 text-center">
+                                                                                🔴 {battle.combo2.name}
+                                                                            </div>
+                                                                            <div className="text-2xl font-bold text-red-600 dark:text-red-400 text-center">
+                                                                                {battle.combo2_score} Points
+                                                                            </div>
+                                                                            <div className="bg-white dark:bg-gray-700 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
+                                                                                <div className="text-sm font-medium text-gray-900 dark:text-white mb-2">
+                                                                                    Finish Breakdown:
+                                                                                </div>
+                                                                                {battleDetails.combo2Finishes && battleDetails.combo2Finishes.length > 0 ? (
+                                                                                    <div className="space-y-1">
+                                                                                        {battleDetails.combo2Finishes.map((finish, index) => (
+                                                                                            <div key={index} className="flex justify-between items-center text-sm">
+                                                                                                <span className="flex items-center gap-1">
+                                                                                                    {finish.type === 'spin' && '🟢 Spin Finish'}
+                                                                                                    {finish.type === 'over' && '🔵 Over Finish'}
+                                                                                                    {finish.type === 'burst' && '🟠 Burst Finish'}
+                                                                                                    {finish.type === 'xtreme' && '🟣 Xtreme Finish'}
+                                                                                                </span>
+                                                                                                <span className="font-medium text-gray-600 dark:text-gray-400">
+                                                                                                    +{finish.points} pts
+                                                                                                </span>
+                                                                                            </div>
+                                                                                        ))}
+                                                                                    </div>
+                                                                                ) : (
+                                                                                    <div className="text-sm text-gray-500 dark:text-gray-400 italic">
+                                                                                        No finishes recorded
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
                                                                 </div>
-                                                            </div>
+                                                            )}
+
+                                                            {/* Expanded Timed Mode Details */}
+                                                            {isExpanded && battleDetails.mode === 'timed' && (
+                                                                <div className="border-t border-gray-200 dark:border-gray-600 p-4 bg-gray-100 dark:bg-gray-800">
+                                                                    <h5 className="font-medium text-gray-900 dark:text-white mb-3">
+                                                                        ⏱️ Battle Breakdown - Timed Mode
+                                                                    </h5>
+                                                                    <div className="text-center mb-4">
+                                                                        <div className="inline-block bg-orange-100 dark:bg-orange-900/30 px-4 py-2 rounded-lg border border-orange-200 dark:border-orange-800">
+                                                                            <span className="text-orange-800 dark:text-orange-300 font-medium">
+                                                                                🎯 Target: {battleDetails.targetScore || 'Unknown'} points
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="grid grid-cols-2 gap-6">
+                                                                        {/* Combo 1 Finishes */}
+                                                                        <div className="space-y-3">
+                                                                            <div className="font-medium text-blue-600 dark:text-blue-400 text-center">
+                                                                                🔵 {battle.combo1.name}
+                                                                            </div>
+                                                                            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 text-center">
+                                                                                {battle.combo1_score} Points
+                                                                            </div>
+                                                                            <div className="bg-white dark:bg-gray-700 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
+                                                                                <div className="text-sm font-medium text-gray-900 dark:text-white mb-2">
+                                                                                    Finish Breakdown:
+                                                                                </div>
+                                                                                {battleDetails.combo1Finishes && battleDetails.combo1Finishes.length > 0 ? (
+                                                                                    <div className="space-y-1">
+                                                                                        {battleDetails.combo1Finishes.map((finish, index) => (
+                                                                                            <div key={index} className="flex justify-between items-center text-sm">
+                                                                                                <span className="flex items-center gap-1">
+                                                                                                    {finish.type === 'spin' && '🟢 Spin Finish'}
+                                                                                                    {finish.type === 'over' && '🔵 Over Finish'}
+                                                                                                    {finish.type === 'burst' && '🟠 Burst Finish'}
+                                                                                                    {finish.type === 'xtreme' && '🟣 Xtreme Finish'}
+                                                                                                </span>
+                                                                                                <span className="font-medium text-gray-600 dark:text-gray-400">
+                                                                                                    +{finish.points} pts
+                                                                                                </span>
+                                                                                            </div>
+                                                                                        ))}
+                                                                                    </div>
+                                                                                ) : (
+                                                                                    <div className="text-sm text-gray-500 dark:text-gray-400 italic">
+                                                                                        No detailed finish data available
+                                                                                    </div>
+                                                                                )}
+                                                                                <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
+                                                                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                                                        {battleDetails.targetScore && battle.combo1_score >= battleDetails.targetScore ? '🏆 Reached target first!' :
+                                                                                            battleDetails.targetScore ? `${battleDetails.targetScore - battle.combo1_score} points to target` :
+                                                                                                'Target information not available'}
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        {/* Combo 2 Finishes */}
+                                                                        <div className="space-y-3">
+                                                                            <div className="font-medium text-red-600 dark:text-red-400 text-center">
+                                                                                🔴 {battle.combo2.name}
+                                                                            </div>
+                                                                            <div className="text-2xl font-bold text-red-600 dark:text-red-400 text-center">
+                                                                                {battle.combo2_score} Points
+                                                                            </div>
+                                                                            <div className="bg-white dark:bg-gray-700 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
+                                                                                <div className="text-sm font-medium text-gray-900 dark:text-white mb-2">
+                                                                                    Finish Breakdown:
+                                                                                </div>
+                                                                                {battleDetails.combo2Finishes && battleDetails.combo2Finishes.length > 0 ? (
+                                                                                    <div className="space-y-1">
+                                                                                        {battleDetails.combo2Finishes.map((finish, index) => (
+                                                                                            <div key={index} className="flex justify-between items-center text-sm">
+                                                                                                <span className="flex items-center gap-1">
+                                                                                                    {finish.type === 'spin' && '🟢 Spin Finish'}
+                                                                                                    {finish.type === 'over' && '🔵 Over Finish'}
+                                                                                                    {finish.type === 'burst' && '🟠 Burst Finish'}
+                                                                                                    {finish.type === 'xtreme' && '🟣 Xtreme Finish'}
+                                                                                                </span>
+                                                                                                <span className="font-medium text-gray-600 dark:text-gray-400">
+                                                                                                    +{finish.points} pts
+                                                                                                </span>
+                                                                                            </div>
+                                                                                        ))}
+                                                                                    </div>
+                                                                                ) : (
+                                                                                    <div className="text-sm text-gray-500 dark:text-gray-400 italic">
+                                                                                        No detailed finish data available
+                                                                                    </div>
+                                                                                )}
+                                                                                <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
+                                                                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                                                        {battleDetails.targetScore && battle.combo2_score >= battleDetails.targetScore ? '🏆 Reached target first!' :
+                                                                                            battleDetails.targetScore ? `${battleDetails.targetScore - battle.combo2_score} points to target` :
+                                                                                                'Target information not available'}
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            )}
                                                         </div>
-                                                    </div>
-                                                ))}
+                                                    )
+                                                })}
                                             </div>
                                         )}
                                     </div>
@@ -1443,434 +1662,6 @@ export default function Testing() {
                                 </div>
                             )}
 
-                            {/* �🔥 PHASE 3B: ADVANCED ANALYTICS SECTION 🔥 */}
-                            <div className="mt-16">
-                                <div className="text-center mb-8">
-                                    <button
-                                        onClick={() => setShowAnalytics(!showAnalytics)}
-                                        className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors mr-4"
-                                    >
-                                        {showAnalytics ? '📈 Hide Analytics Dashboard' : '📈 Show Analytics Dashboard'}
-                                    </button>
-                                    <span className="text-gray-600 dark:text-gray-400">
-                                        Advanced performance insights
-                                    </span>
-                                </div>
-
-                                {showAnalytics && (
-                                    <div className="space-y-8">
-                                        {/* Win Streaks Section */}
-                                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
-                                            <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6 text-center">
-                                                🔥 Win Streak Tracker
-                                            </h3>
-                                            <div className="grid md:grid-cols-2 gap-6">
-                                                {/* Current Streaks */}
-                                                <div>
-                                                    <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Current Streaks</h4>
-                                                    <div className="space-y-3">
-                                                        {getWinStreaks().slice(0, 5).map((streak, index) => (
-                                                            <div key={streak.combo.id} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                                                                <div>
-                                                                    <div className="font-medium text-gray-900 dark:text-white">
-                                                                        {index === 0 && streak.current > 0 && "🏆 "}
-                                                                        {streak.combo.name}
-                                                                    </div>
-                                                                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                                                                        {formatComboDisplay(streak.combo)}
-                                                                    </div>
-                                                                </div>
-                                                                <div className="text-right">
-                                                                    <div className={`text-2xl font-bold ${streak.current > 0 ? 'text-green-600' : 'text-gray-400'}`}>
-                                                                        {streak.current}
-                                                                    </div>
-                                                                    <div className="text-sm text-gray-500">
-                                                                        {streak.current === 1 ? 'win' : 'wins'}
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-
-                                                {/* Longest Streaks */}
-                                                <div>
-                                                    <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Longest Streaks (All Time)</h4>
-                                                    <div className="space-y-3">
-                                                        {getWinStreaks().sort((a, b) => b.longest - a.longest).slice(0, 5).map((streak, index) => (
-                                                            <div key={`longest-${streak.combo.id}`} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                                                                <div>
-                                                                    <div className="font-medium text-gray-900 dark:text-white">
-                                                                        {index === 0 && streak.longest > 0 && "👑 "}
-                                                                        {streak.combo.name}
-                                                                    </div>
-                                                                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                                                                        {formatComboDisplay(streak.combo)}
-                                                                    </div>
-                                                                </div>
-                                                                <div className="text-right">
-                                                                    <div className={`text-2xl font-bold ${streak.longest > 0 ? 'text-purple-600' : 'text-gray-400'}`}>
-                                                                        {streak.longest}
-                                                                    </div>
-                                                                    <div className="text-sm text-gray-500">record</div>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Performance Trends Section */}
-                                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
-                                            <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6 text-center">
-                                                📈 Performance Trends (Last 10 Battles)
-                                            </h3>
-                                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                                {getPerformanceTrends().map((trend) => (
-                                                    <div key={trend.combo.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
-                                                        <div className="flex items-center justify-between mb-4">
-                                                            <h4 className="font-medium text-gray-900 dark:text-white">
-                                                                {trend.combo.name}
-                                                            </h4>
-                                                            <div className={`px-3 py-1 rounded-full text-sm font-medium ${trend.trend === 'improving' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
-                                                                trend.trend === 'declining' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' :
-                                                                    'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-300'
-                                                                }`}>
-                                                                {trend.trend === 'improving' ? '📈' : trend.trend === 'declining' ? '📉' : '➡️'} {trend.trend}
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                                                            {formatComboDisplay(trend.combo)}
-                                                        </div>
-
-                                                        <div className="mb-4">
-                                                            <div className="flex items-center justify-between mb-2">
-                                                                <span className="text-sm text-gray-600 dark:text-gray-400">Win Rate</span>
-                                                                <span className="text-lg font-bold text-gray-900 dark:text-white">
-                                                                    {trend.winRate.toFixed(1)}%
-                                                                </span>
-                                                            </div>
-                                                            <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
-                                                                <div
-                                                                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                                                                    style={{ width: `${trend.winRate}%` }}
-                                                                ></div>
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Recent Battle Results */}
-                                                        <div>
-                                                            <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">Recent Results</div>
-                                                            <div className="flex gap-1">
-                                                                {trend.wins.map((win, index) => (
-                                                                    <div
-                                                                        key={index}
-                                                                        className={`w-6 h-6 rounded text-xs flex items-center justify-center font-medium ${win ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-                                                                            }`}
-                                                                    >
-                                                                        {win ? 'W' : 'L'}
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                        {/* Head-to-Head Analysis Section */}
-                                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
-                                            <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6 text-center">
-                                                ⚔️ Head-to-Head Analysis
-                                            </h3>
-                                            <div className="space-y-4">
-                                                {getHeadToHeadStats().map((h2h) => (
-                                                    <div key={`${h2h.combo1.id}-${h2h.combo2.id}`} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
-                                                        <div className="grid md:grid-cols-2 gap-6">
-                                                            {/* Combo 1 */}
-                                                            <div className="text-center">
-                                                                <div className="font-medium text-blue-600 dark:text-blue-400 mb-2">
-                                                                    {h2h.combo1.name}
-                                                                </div>
-                                                                <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                                                                    {formatComboDisplay(h2h.combo1)}
-                                                                </div>
-                                                                <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                                                                    {h2h.combo1Wins}
-                                                                </div>
-                                                                <div className="text-sm text-gray-500">wins</div>
-                                                            </div>
-
-                                                            {/* VS and Stats */}
-                                                            <div className="text-center md:border-l border-gray-200 dark:border-gray-600">
-                                                                <div className="font-medium text-red-600 dark:text-red-400 mb-2">
-                                                                    {h2h.combo2.name}
-                                                                </div>
-                                                                <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                                                                    {formatComboDisplay(h2h.combo2)}
-                                                                </div>
-                                                                <div className="text-3xl font-bold text-red-600 dark:text-red-400">
-                                                                    {h2h.combo2Wins}
-                                                                </div>
-                                                                <div className="text-sm text-gray-500">wins</div>
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600 text-center">
-                                                            <div className="grid grid-cols-3 gap-4 text-sm">
-                                                                <div>
-                                                                    <div className="font-medium text-gray-900 dark:text-white">{h2h.battles}</div>
-                                                                    <div className="text-gray-500">Total Battles</div>
-                                                                </div>
-                                                                <div>
-                                                                    <div className="font-medium text-gray-900 dark:text-white">{h2h.ties}</div>
-                                                                    <div className="text-gray-500">Ties</div>
-                                                                </div>
-                                                                <div>
-                                                                    <div className="font-medium text-gray-900 dark:text-white">
-                                                                        {h2h.battles > 0 ? ((Math.max(h2h.combo1Wins, h2h.combo2Wins) / h2h.battles) * 100).toFixed(1) : 0}%
-                                                                    </div>
-                                                                    <div className="text-gray-500">Dominance</div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ))}
-
-                                                {getHeadToHeadStats().length === 0 && (
-                                                    <div className="text-center py-8 text-gray-600 dark:text-gray-300">
-                                                        No head-to-head data yet. Need at least 2 battles between combos to show analysis.
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {/* Strength/Weakness Matrix Section */}
-                                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
-                                            <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6 text-center">
-                                                🎯 Strength & Weakness Matrix
-                                            </h3>
-                                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                                {getStrengthWeaknessMatrix().map((matrix) => (
-                                                    <div key={matrix.combo.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
-                                                        <div className="text-center mb-4">
-                                                            <h4 className="font-medium text-gray-900 dark:text-white mb-2">
-                                                                {matrix.combo.name}
-                                                            </h4>
-                                                            <div className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                                                                {formatComboDisplay(matrix.combo)}
-                                                            </div>
-                                                            <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-                                                                {matrix.dominance.toFixed(1)}%
-                                                            </div>
-                                                            <div className="text-sm text-gray-500">Overall Dominance</div>
-                                                        </div>
-
-                                                        {/* Strengths */}
-                                                        <div className="mb-4">
-                                                            <div className="text-sm font-medium text-green-700 dark:text-green-400 mb-2">
-                                                                💪 Strengths ({matrix.strengths.length})
-                                                            </div>
-                                                            {matrix.strengths.length > 0 ? (
-                                                                <div className="space-y-1">
-                                                                    {matrix.strengths.slice(0, 3).map((strength) => (
-                                                                        <div key={strength.id} className="text-xs text-gray-600 dark:text-gray-400 bg-green-50 dark:bg-green-900/20 rounded px-2 py-1">
-                                                                            {strength.name}
-                                                                        </div>
-                                                                    ))}
-                                                                    {matrix.strengths.length > 3 && (
-                                                                        <div className="text-xs text-gray-500">
-                                                                            +{matrix.strengths.length - 3} more
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            ) : (
-                                                                <div className="text-xs text-gray-500">No clear strengths yet</div>
-                                                            )}
-                                                        </div>
-
-                                                        {/* Weaknesses */}
-                                                        <div>
-                                                            <div className="text-sm font-medium text-red-700 dark:text-red-400 mb-2">
-                                                                🎯 Weaknesses ({matrix.weaknesses.length})
-                                                            </div>
-                                                            {matrix.weaknesses.length > 0 ? (
-                                                                <div className="space-y-1">
-                                                                    {matrix.weaknesses.slice(0, 3).map((weakness) => (
-                                                                        <div key={weakness.id} className="text-xs text-gray-600 dark:text-gray-400 bg-red-50 dark:bg-red-900/20 rounded px-2 py-1">
-                                                                            {weakness.name}
-                                                                        </div>
-                                                                    ))}
-                                                                    {matrix.weaknesses.length > 3 && (
-                                                                        <div className="text-xs text-gray-500">
-                                                                            +{matrix.weaknesses.length - 3} more
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            ) : (
-                                                                <div className="text-xs text-gray-500">No clear weaknesses yet</div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* 🚀 PHASE 3C: SMART RECOMMENDATIONS & TOURNAMENT INTEGRATION 🚀 */}
-                            <div className="mt-16">
-                                <div className="text-center mb-8">
-                                    <button
-                                        onClick={() => setShowRecommendations(!showRecommendations)}
-                                        className="bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 text-white font-semibold py-3 px-6 rounded-lg transition-all transform hover:scale-105 mr-4"
-                                    >
-                                        {showRecommendations ? '🤖 Hide AI Recommendations' : '🤖 Show AI Recommendations'}
-                                    </button>
-                                    <span className="text-gray-600 dark:text-gray-400">
-                                        AI-powered insights & tournament tools
-                                    </span>
-                                </div>
-
-                                {showRecommendations && (
-                                    <div className="space-y-8">
-                                        {/* Smart Combo Recommendations */}
-                                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
-                                            <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6 text-center">
-                                                🧠 AI-Powered Combo Recommendations
-                                            </h3>
-                                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                                {getSmartRecommendations().map((rec, index) => (
-                                                    <div key={`${rec.type}-${rec.combo.id}-${index}`} className={`rounded-lg p-6 border-l-4 ${rec.type === 'topPerformer' ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-500' :
-                                                        rec.type === 'underrated' ? 'bg-green-50 dark:bg-green-900/20 border-green-500' :
-                                                            rec.type === 'counter' ? 'bg-red-50 dark:bg-red-900/20 border-red-500' :
-                                                                rec.type === 'experimental' ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500' :
-                                                                    'bg-purple-50 dark:bg-purple-900/20 border-purple-500'
-                                                        }`}>
-                                                        <div className="flex items-center justify-between mb-3">
-                                                            <div className={`px-3 py-1 rounded-full text-sm font-medium ${rec.type === 'topPerformer' ? 'bg-yellow-200 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-200' :
-                                                                rec.type === 'underrated' ? 'bg-green-200 text-green-800 dark:bg-green-800 dark:text-green-200' :
-                                                                    rec.type === 'counter' ? 'bg-red-200 text-red-800 dark:bg-red-800 dark:text-red-200' :
-                                                                        rec.type === 'experimental' ? 'bg-blue-200 text-blue-800 dark:bg-blue-800 dark:text-blue-200' :
-                                                                            'bg-purple-200 text-purple-800 dark:bg-purple-800 dark:text-purple-200'
-                                                                }`}>
-                                                                {rec.type === 'topPerformer' && '🏆 Top Performer'}
-                                                                {rec.type === 'underrated' && '💎 Hidden Gem'}
-                                                                {rec.type === 'counter' && '⚔️ Counter Pick'}
-                                                                {rec.type === 'experimental' && '🧪 Experimental'}
-                                                                {rec.type === 'balanced' && '⚖️ Balanced'}
-                                                            </div>
-                                                            <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                                                {rec.confidence.toFixed(0)}% confidence
-                                                            </div>
-                                                        </div>
-
-                                                        <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
-                                                            {rec.combo.name}
-                                                        </h4>
-
-                                                        <div className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                                                            {formatComboDisplay(rec.combo)}
-                                                        </div>
-
-                                                        <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
-                                                            {rec.reason}
-                                                        </p>
-
-                                                        <div className="flex gap-2">
-                                                            <button
-                                                                onClick={() => setSelectedCombo1(rec.combo)}
-                                                                className="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-sm py-2 px-3 rounded transition-colors"
-                                                            >
-                                                                Test as Player 1
-                                                            </button>
-                                                            <button
-                                                                onClick={() => setSelectedCombo2(rec.combo)}
-                                                                className="flex-1 bg-red-500 hover:bg-red-600 text-white text-sm py-2 px-3 rounded transition-colors"
-                                                            >
-                                                                Test as Player 2
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                ))}
-
-                                                {getSmartRecommendations().length === 0 && (
-                                                    <div className="col-span-full text-center py-8 text-gray-600 dark:text-gray-300">
-                                                        Need more battle data to generate AI recommendations. Start testing combos!
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {/* Practice Goals */}
-                                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
-                                            <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6 text-center">
-                                                🎯 Practice Goals & Training Objectives
-                                            </h3>
-
-                                            <div className="grid md:grid-cols-2 gap-6">
-                                                {generatePracticeGoals().map((goal) => (
-                                                    <div key={goal.id} className={`rounded-lg p-6 border-l-4 ${goal.completed ? 'bg-green-50 dark:bg-green-900/20 border-green-500' : 'bg-blue-50 dark:bg-blue-900/20 border-blue-500'}`}>
-                                                        <div className="flex items-center justify-between mb-3">
-                                                            <div className={`px-3 py-1 rounded-full text-sm font-medium ${goal.completed ? 'bg-green-200 text-green-800 dark:bg-green-800 dark:text-green-200' : 'bg-blue-200 text-blue-800 dark:bg-blue-800 dark:text-blue-200'}`}>
-                                                                {goal.type === 'winStreak' && '🔥 Win Streak'}
-                                                                {goal.type === 'winRate' && '📈 Win Rate'}
-                                                                {goal.type === 'beatSpecific' && '⚔️ Counter Training'}
-                                                                {goal.type === 'tournament' && '🏆 Tournament Prep'}
-                                                            </div>
-                                                            <div className={`text-sm font-medium ${goal.completed ? 'text-green-600' : 'text-blue-600'}`}>
-                                                                {goal.completed ? '✅ Complete!' : 'In Progress'}
-                                                            </div>
-                                                        </div>
-
-                                                        <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
-                                                            {goal.description}
-                                                        </h4>
-
-                                                        {goal.combo && (
-                                                            <div className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                                                                Combo: {formatComboDisplay(goal.combo)}
-                                                            </div>
-                                                        )}
-
-                                                        {goal.type !== 'tournament' && (
-                                                            <div className="mb-4">
-                                                                <div className="flex items-center justify-between mb-2">
-                                                                    <span className="text-sm text-gray-600 dark:text-gray-400">Progress</span>
-                                                                    <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                                                        {goal.current} / {goal.target}
-                                                                    </span>
-                                                                </div>
-                                                                <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
-                                                                    <div
-                                                                        className={`h-2 rounded-full transition-all duration-300 ${goal.completed ? 'bg-green-500' : 'bg-blue-500'}`}
-                                                                        style={{ width: `${Math.min(100, (goal.current / (typeof goal.target === 'number' ? goal.target : 1)) * 100)}%` }}
-                                                                    ></div>
-                                                                </div>
-                                                            </div>
-                                                        )}
-
-                                                        {goal.combo && (
-                                                            <div className="flex gap-2">
-                                                                <button
-                                                                    onClick={() => setSelectedCombo1(goal.combo!)}
-                                                                    className="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-sm py-2 px-3 rounded transition-colors"
-                                                                >
-                                                                    Practice Now
-                                                                </button>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
                             {/* Leaderboard Section */}
                             <div className="mt-16">
                                 <div className="text-center mb-8">
@@ -1901,60 +1692,87 @@ export default function Testing() {
                                                             <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">Combo</th>
                                                             <th className="text-center py-3 px-4 font-semibold text-gray-900 dark:text-white">Win Rate</th>
                                                             <th className="text-center py-3 px-4 font-semibold text-gray-900 dark:text-white">Battles</th>
-                                                            <th className="text-center py-3 px-4 font-semibold text-gray-900 dark:text-white">W/L</th>
+                                                            <th className="text-center py-3 px-4 font-semibold text-gray-900 dark:text-white">Best Matchup</th>
+                                                            <th className="text-center py-3 px-4 font-semibold text-gray-900 dark:text-white">Worst Matchup</th>
                                                             <th className="text-center py-3 px-4 font-semibold text-gray-900 dark:text-white">Avg Points</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                        {leaderboard.map((stat, index) => (
-                                                            <tr key={stat.combo_id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                                                                <td className="py-4 px-4">
-                                                                    <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold text-white ${index === 0 ? 'bg-yellow-500' :
-                                                                        index === 1 ? 'bg-gray-400' :
-                                                                            index === 2 ? 'bg-orange-500' :
-                                                                                'bg-gray-300 text-gray-700'
-                                                                        }`}>
-                                                                        {index + 1}
-                                                                    </span>
-                                                                </td>
-                                                                <td className="py-4 px-4">
-                                                                    <div>
-                                                                        <p className="font-medium text-gray-900 dark:text-white">
-                                                                            {stat.combo.name}
-                                                                        </p>
-                                                                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                                                                            {formatComboDisplay(stat.combo)}
-                                                                        </p>
-                                                                    </div>
-                                                                </td>
-                                                                <td className="py-4 px-4 text-center">
-                                                                    <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${stat.win_rate >= 75 ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
-                                                                        stat.win_rate >= 50 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' :
-                                                                            'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
-                                                                        }`}>
-                                                                        {stat.win_rate.toFixed(1)}%
-                                                                    </span>
-                                                                </td>
-                                                                <td className="py-4 px-4 text-center text-gray-900 dark:text-white">
-                                                                    {stat.total_battles}
-                                                                </td>
-                                                                <td className="py-4 px-4 text-center text-gray-900 dark:text-white">
-                                                                    <span className="text-green-600 dark:text-green-400">{stat.wins}</span>
-                                                                    /
-                                                                    <span className="text-red-600 dark:text-red-400">{stat.losses}</span>
-                                                                </td>
-                                                                <td className="py-4 px-4 text-center">
-                                                                    <div className="text-sm">
-                                                                        <div className="text-green-600 dark:text-green-400">
-                                                                            +{stat.average_points_scored.toFixed(1)}
+                                                        {leaderboard.map((stat, index) => {
+                                                            const matchups = getMatchupStats(stat.combo_id)
+                                                            return (
+                                                                <tr key={stat.combo_id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                                                    <td className="py-4 px-4">
+                                                                        <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold text-white ${index === 0 ? 'bg-yellow-500' :
+                                                                            index === 1 ? 'bg-gray-400' :
+                                                                                index === 2 ? 'bg-orange-500' :
+                                                                                    'bg-gray-300 text-gray-700'
+                                                                            }`}>
+                                                                            {index + 1}
+                                                                        </span>
+                                                                    </td>
+                                                                    <td className="py-4 px-4">
+                                                                        <div>
+                                                                            <p className="font-medium text-gray-900 dark:text-white">
+                                                                                {stat.combo.name}
+                                                                            </p>
+                                                                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                                                                {formatComboDisplay(stat.combo)}
+                                                                            </p>
                                                                         </div>
-                                                                        <div className="text-red-600 dark:text-red-400">
-                                                                            -{stat.average_points_against.toFixed(1)}
+                                                                    </td>
+                                                                    <td className="py-4 px-4 text-center">
+                                                                        <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${stat.win_rate >= 75 ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
+                                                                            stat.win_rate >= 50 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' :
+                                                                                'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                                                                            }`}>
+                                                                            {stat.win_rate.toFixed(1)}%
+                                                                        </span>
+                                                                    </td>
+                                                                    <td className="py-4 px-4 text-center text-gray-900 dark:text-white">
+                                                                        {stat.total_battles}
+                                                                    </td>
+                                                                    <td className="py-4 px-4 text-center">
+                                                                        {matchups.bestMatchup ? (
+                                                                            <div className="text-sm">
+                                                                                <div className="font-medium text-green-600 dark:text-green-400">
+                                                                                    {matchups.bestMatchup.combo.name}
+                                                                                </div>
+                                                                                <div className="text-xs text-gray-500">
+                                                                                    {(matchups.bestMatchup.winRate * 100).toFixed(0)}% ({matchups.bestMatchup.battles} games)
+                                                                                </div>
+                                                                            </div>
+                                                                        ) : (
+                                                                            <span className="text-gray-400 text-sm">Not enough data</span>
+                                                                        )}
+                                                                    </td>
+                                                                    <td className="py-4 px-4 text-center">
+                                                                        {matchups.worstMatchup ? (
+                                                                            <div className="text-sm">
+                                                                                <div className="font-medium text-red-600 dark:text-red-400">
+                                                                                    {matchups.worstMatchup.combo.name}
+                                                                                </div>
+                                                                                <div className="text-xs text-gray-500">
+                                                                                    {(matchups.worstMatchup.winRate * 100).toFixed(0)}% ({matchups.worstMatchup.battles} games)
+                                                                                </div>
+                                                                            </div>
+                                                                        ) : (
+                                                                            <span className="text-gray-400 text-sm">Not enough data</span>
+                                                                        )}
+                                                                    </td>
+                                                                    <td className="py-4 px-4 text-center">
+                                                                        <div className="text-sm">
+                                                                            <div className="text-green-600 dark:text-green-400">
+                                                                                +{stat.average_points_scored.toFixed(1)}
+                                                                            </div>
+                                                                            <div className="text-red-600 dark:text-red-400">
+                                                                                -{stat.average_points_against.toFixed(1)}
+                                                                            </div>
                                                                         </div>
-                                                                    </div>
-                                                                </td>
-                                                            </tr>
-                                                        ))}
+                                                                    </td>
+                                                                </tr>
+                                                            )
+                                                        })}
                                                     </tbody>
                                                 </table>
                                             </div>
