@@ -1,5 +1,5 @@
 // Beyblade part types
-export type PartType = 'blade' | 'assist_blade' | 'ratchet' | 'bit'
+export type PartType = 'blade' | 'assist_blade' | 'ratchet' | 'bit' | 'lock_chip'
 
 export interface BeybladePartDB {
     id: number
@@ -20,6 +20,7 @@ export interface BeybladeCombo {
     assist_blade_id: number | null
     ratchet_id: number | null
     bit_id: number | null
+    lock_chip_id: number | null
     notes?: string
     total_points: number
     tournaments_used: number
@@ -94,6 +95,7 @@ export interface ComboWithParts extends BeybladeCombo {
     assist_blade?: BeybladePartDB
     ratchet?: BeybladePartDB
     bit?: BeybladePartDB
+    lock_chip?: BeybladePartDB
 }
 
 // Tournament with combo details for display
@@ -119,6 +121,7 @@ export interface BeybladeComboCreate {
     assist_blade_id: number | null
     ratchet_id: number | null
     bit_id: number | null
+    lock_chip_id: number | null
     notes?: string
 }
 

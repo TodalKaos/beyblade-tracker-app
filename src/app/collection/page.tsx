@@ -4,10 +4,13 @@ import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import { getAllParts, getCollectionStats, addPart, updatePart, deletePart, searchParts } from '@/services/database'
 import type { BeybladePartDB, BeybladePartCreate, PartType } from '@/types/beyblade'
+import type { MasterProduct } from '@/data/masterProducts'
 import Navigation from '@/components/Navigation'
 import Footer from '@/components/Footer'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import AutocompleteInput from '@/components/AutocompleteInput'
+import EnhancedAutocompleteInput from '@/components/EnhancedAutocompleteInput'
+import RandomBoosterModal from '@/components/RandomBoosterModal'
 import { MASTER_PARTS } from '@/data/masterParts'
 
 export default function Collection() {
@@ -17,6 +20,7 @@ export default function Collection() {
         assist_blade: 0,
         ratchet: 0,
         bit: 0,
+        lock_chip: 0,
         total: 0
     })
     const [loading, setLoading] = useState(true)
@@ -44,6 +48,10 @@ export default function Collection() {
         color: '',
         notes: ''
     })
+
+    // Random booster state
+    const [showRandomBoosterModal, setShowRandomBoosterModal] = useState(false)
+    const [selectedRandomBooster, setSelectedRandomBooster] = useState<MasterProduct | null>(null)
 
     // Helper function to get part image from master parts
     const getPartImage = (partName: string, partType: PartType): string => {
@@ -177,6 +185,93 @@ export default function Collection() {
         } catch (error) {
             console.error('Error adding/updating part:', error)
             alert('Error adding part. Please try again.')
+        }
+    }
+
+    const handleAddCompleteProduct = async (product: MasterProduct) => {
+        try {
+            const addedParts: string[] = []
+            const updatedParts: string[] = []
+
+            for (const productPart of product.parts) {
+                // Check if part already exists (same name and type)
+                const existingPart = parts.find(
+                    part => part.name.toLowerCase() === productPart.name.toLowerCase() &&
+                        part.type === productPart.type
+                )
+
+                const quantity = productPart.quantity || 1
+
+                if (existingPart) {
+                    // Update existing part quantity
+                    const updatedQuantity = existingPart.quantity + quantity
+                    await updatePart(existingPart.id, {
+                        name: existingPart.name,
+                        type: existingPart.type,
+                        quantity: updatedQuantity,
+                        series: existingPart.series || product.series,
+                        color: existingPart.color,
+                        notes: existingPart.notes || `From ${product.name} (${product.series})`
+                    })
+                    updatedParts.push(`${productPart.name} (${existingPart.quantity} → ${updatedQuantity})`)
+                } else {
+                    // Add as new part
+                    await addPart({
+                        name: productPart.name,
+                        type: productPart.type,
+                        quantity: quantity,
+                        series: product.series,
+                        color: '',
+                        notes: `From ${product.name} (${product.series})`
+                    })
+                    addedParts.push(`${productPart.name} (x${quantity})`)
+                }
+            }
+
+            // Clear the input and close form
+            setNewPart({ name: '', type: 'blade' as PartType, quantity: 1, series: '', color: '', notes: '' })
+            setShowAddForm(false)
+            loadData()
+            setSearchTerm('')
+            setFilterType('all')
+            setCurrentPage(1)
+
+            // Show success message
+            const messages = []
+            if (addedParts.length > 0) {
+                messages.push(`Added: ${addedParts.join(', ')}`)
+            }
+            if (updatedParts.length > 0) {
+                messages.push(`Updated: ${updatedParts.join(', ')}`)
+            }
+
+            alert(`Successfully added product "${product.name}"!\n\n${messages.join('\n')}`)
+        } catch (error) {
+            console.error('Error adding complete product:', error)
+            alert('Error adding product. Please try again.')
+        }
+    }
+
+    // Handle random booster selection - opens modal for product selection
+    const handleRandomBoosterSelect = (randomBooster: MasterProduct) => {
+        setSelectedRandomBooster(randomBooster)
+        setShowRandomBoosterModal(true)
+    }
+
+    // Handle product selection from random booster modal
+    const handleRandomBoosterProductSelect = async (selectedProduct: MasterProduct) => {
+        if (!selectedRandomBooster) return
+
+        try {
+            // Add the selected product's parts using the same logic as regular products
+            await handleAddCompleteProduct(selectedProduct)
+
+            // Close modal
+            setShowRandomBoosterModal(false)
+            setSelectedRandomBooster(null)
+        } catch (error) {
+            console.error('Error adding random booster product:', error)
+            throw error // Re-throw to let modal handle the error state
         }
     }
 
@@ -315,6 +410,7 @@ export default function Collection() {
                                             <option value="assist_blade">Assist Blades</option>
                                             <option value="ratchet">Ratchets</option>
                                             <option value="bit">Bits</option>
+                                            <option value="lock_chip">Lock Chips</option>
                                         </select>
                                     </div>
                                     <div>
@@ -375,7 +471,10 @@ export default function Collection() {
                             {/* Add Part Form */}
                             {showAddForm && (
                                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 mb-8">
-                                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Add New Part</h3>
+                                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Add New Part</h3>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                                        💡 <strong>Tip:</strong> Type a blade name (like &quot;Dran Buster&quot;) to see complete products that include all parts!
+                                    </p>
 
                                     {/* Existing Part Detection */}
                                     {(() => {
@@ -408,7 +507,7 @@ export default function Collection() {
                                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                                     Part Name
                                                 </label>
-                                                <AutocompleteInput
+                                                <EnhancedAutocompleteInput
                                                     value={newPart.name}
                                                     onChange={(value, partInfo) => {
                                                         console.log('Collection - received part info:', {
@@ -423,10 +522,13 @@ export default function Collection() {
                                                         }
                                                         setNewPart(updatedPart)
                                                     }}
+                                                    onProductSelect={handleAddCompleteProduct}
+                                                    onRandomBoosterSelect={handleRandomBoosterSelect}
                                                     type={newPart.type}
                                                     existingParts={parts}
-                                                    placeholder="Start typing part name..."
+                                                    placeholder="Start typing part name or product..."
                                                     required
+                                                    showProducts={true}
                                                 />
                                             </div>
                                             <div>
@@ -442,6 +544,7 @@ export default function Collection() {
                                                     <option value="assist_blade">Assist Blade</option>
                                                     <option value="ratchet">Ratchet</option>
                                                     <option value="bit">Bit</option>
+                                                    <option value="lock_chip">Lock Chip</option>
                                                 </select>
                                             </div>
                                             <div>
@@ -565,6 +668,7 @@ export default function Collection() {
                                                     <option value="assist_blade">Assist Blade</option>
                                                     <option value="ratchet">Ratchet</option>
                                                     <option value="bit">Bit</option>
+                                                    <option value="lock_chip">Lock Chip</option>
                                                 </select>
                                             </div>
                                             <div>
@@ -880,6 +984,19 @@ export default function Collection() {
                     </div>
                 </div>
                 <Footer />
+
+                {/* Random Booster Modal */}
+                {selectedRandomBooster && (
+                    <RandomBoosterModal
+                        isOpen={showRandomBoosterModal}
+                        onClose={() => {
+                            setShowRandomBoosterModal(false)
+                            setSelectedRandomBooster(null)
+                        }}
+                        randomBooster={selectedRandomBooster}
+                        onProductSelect={handleRandomBoosterProductSelect}
+                    />
+                )}
             </div>
         </ProtectedRoute>
     )

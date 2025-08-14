@@ -75,6 +75,45 @@ export default function EnhancedTournaments() {
         loadData()
     }, [loadData])
 
+    // Helper function to check if a combo has any duplicate parts with existing deck
+    const hasNoDuplicateParts = (newCombo: ComboWithParts, existingDeck: ComboWithParts[]): boolean => {
+        const usedParts = new Set<string>()
+
+        // Collect all parts from existing deck
+        existingDeck.forEach(combo => {
+            if (combo.blade) usedParts.add(combo.blade.name)
+            if (combo.assist_blade) usedParts.add(combo.assist_blade.name)
+            if (combo.ratchet) usedParts.add(combo.ratchet.name)
+            if (combo.bit) usedParts.add(combo.bit.name)
+            if (combo.lock_chip) usedParts.add(combo.lock_chip.name)
+        })
+
+        // Check if new combo has any conflicting parts
+        if (newCombo.blade && usedParts.has(newCombo.blade.name)) return false
+        if (newCombo.assist_blade && usedParts.has(newCombo.assist_blade.name)) return false
+        if (newCombo.ratchet && usedParts.has(newCombo.ratchet.name)) return false
+        if (newCombo.bit && usedParts.has(newCombo.bit.name)) return false
+        if (newCombo.lock_chip && usedParts.has(newCombo.lock_chip.name)) return false
+
+        return true
+    }
+
+    // Helper function to build deck with no duplicate parts
+    const buildValidDeck = (scoredCombos: Array<{ combo: ComboWithParts, score: number, winRate?: number, avgPoints?: number }>): ComboWithParts[] => {
+        const deck: ComboWithParts[] = []
+        const sortedCombos = [...scoredCombos].sort((a, b) => b.score - a.score)
+
+        for (const item of sortedCombos) {
+            if (deck.length >= 3) break
+
+            if (hasNoDuplicateParts(item.combo, deck)) {
+                deck.push(item.combo)
+            }
+        }
+
+        return deck
+    }
+
     // AI Deck Builder Logic
     const generateDeckRecommendations = useCallback(async () => {
         try {
@@ -104,56 +143,69 @@ export default function EnhancedTournaments() {
                     avgPoints: stat.average_points_scored
                 }))
 
-                bestDeck = scoredCombos
-                    .sort((a, b) => b.score - a.score)
-                    .slice(0, 3)
-                    .map(item => item.combo)
+                bestDeck = buildValidDeck(scoredCombos)
 
-                confidenceScore = 90
-                reasons = [
-                    'Battle-tested performance data',
-                    'Optimized composite scoring',
-                    'Proven tournament viability'
-                ]
+                if (bestDeck.length >= 3) {
+                    confidenceScore = 90
+                    reasons = [
+                        'Battle-tested performance data',
+                        'Optimized composite scoring',
+                        'Proven tournament viability',
+                        'No duplicate parts across deck'
+                    ]
 
-                const avgWinRate = scoredCombos.slice(0, 3).reduce((sum, item) => sum + item.winRate, 0) / 3
-                const avgPointsScored = scoredCombos.slice(0, 3).reduce((sum, item) => sum + item.avgPoints, 0) / 3
+                    const deckScoredCombos = bestDeck.map(combo =>
+                        scoredCombos.find(item => item.combo.id === combo.id)!
+                    )
+                    const avgWinRate = deckScoredCombos.reduce((sum, item) => sum + item.winRate, 0) / deckScoredCombos.length
+                    const avgPointsScored = deckScoredCombos.reduce((sum, item) => sum + item.avgPoints, 0) / deckScoredCombos.length
 
-                expectedPerformance = {
-                    win_rate: avgWinRate,
-                    avg_points: avgPointsScored
+                    expectedPerformance = {
+                        win_rate: avgWinRate,
+                        avg_points: avgPointsScored
+                    }
+                } else {
+                    // Couldn't build valid deck with battle data, fall back to tournament data
+                    bestDeck = []
                 }
-            } else {
-                // Fall back to tournament performance if limited battle data
+            } if (bestDeck.length === 0) {
+                // Fall back to tournament performance if limited battle data or couldn't build valid battle deck
                 const tournamentCombos = combos
                     .filter(combo => combo.tournaments_used > 0)
                     .map(combo => ({
                         combo,
                         score: (combo.total_points / Math.max(combo.tournaments_used, 1)) + (combo.wins * 2) - combo.losses
                     }))
-                    .sort((a, b) => b.score - a.score)
-                    .slice(0, 3)
 
-                if (tournamentCombos.length >= 3) {
-                    bestDeck = tournamentCombos.map(item => item.combo)
+                bestDeck = buildValidDeck(tournamentCombos)
+
+                if (bestDeck.length >= 3) {
                     confidenceScore = 65
                     reasons = [
                         'Tournament performance history',
                         'Points per tournament optimization',
-                        'Win/loss ratio consideration'
+                        'Win/loss ratio consideration',
+                        'No duplicate parts across deck'
                     ]
                     expectedPerformance = {
                         win_rate: 55,
                         avg_points: 2.0
                     }
                 } else {
-                    // Last resort: use any available combos
-                    bestDeck = combos.slice(0, 3)
-                    confidenceScore = 40
+                    // Last resort: use any available combos with no duplicate parts
+                    const allCombosScored = combos.map(combo => ({
+                        combo,
+                        score: (combo.total_points || 0) + (combo.wins * 2) - combo.losses
+                    }))
+
+                    bestDeck = buildValidDeck(allCombosScored)
+
+                    confidenceScore = bestDeck.length >= 3 ? 40 : 20
                     reasons = [
                         'Based on available combos',
                         'Limited performance data',
-                        'Requires testing for optimization'
+                        'No duplicate parts across deck',
+                        bestDeck.length < 3 ? 'Insufficient unique parts for full deck' : 'Requires testing for optimization'
                     ]
                     expectedPerformance = {
                         win_rate: 50,
@@ -174,7 +226,7 @@ export default function EnhancedTournaments() {
         } catch (error) {
             console.error('Error generating deck recommendations:', error)
         }
-    }, [combos])
+    }, [combos, buildValidDeck])
 
     // Separate effect for generating deck recommendations
     useEffect(() => {

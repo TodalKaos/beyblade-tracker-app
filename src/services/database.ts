@@ -153,6 +153,7 @@ export async function getCollectionStats() {
         assist_blade: 0,
         ratchet: 0,
         bit: 0,
+        lock_chip: 0,
         total: 0
     }
 
@@ -210,7 +211,8 @@ export async function getAllCombos(): Promise<ComboWithParts[]> {
       blade:blade_id(id, name, type, series, color),
       assist_blade:assist_blade_id(id, name, type, series, color),
       ratchet:ratchet_id(id, name, type, series, color),
-      bit:bit_id(id, name, type, series, color)
+      bit:bit_id(id, name, type, series, color),
+      lock_chip:lock_chip_id(id, name, type, series, color)
     `)
         .eq('user_id', user.id)
         .order('total_points', { ascending: false })
@@ -291,9 +293,9 @@ export async function getAllTournaments(): Promise<TournamentWithCombos[]> {
         .from('tournaments')
         .select(`
       *,
-      combo1:combo1_id(id, name, total_points, blade:blade_id(name), assist_blade:assist_blade_id(name), ratchet:ratchet_id(name), bit:bit_id(name)),
-      combo2:combo2_id(id, name, total_points, blade:blade_id(name), assist_blade:assist_blade_id(name), ratchet:ratchet_id(name), bit:bit_id(name)),
-      combo3:combo3_id(id, name, total_points, blade:blade_id(name), assist_blade:assist_blade_id(name), ratchet:ratchet_id(name), bit:bit_id(name))
+      combo1:combo1_id(id, name, total_points, blade:blade_id(name), assist_blade:assist_blade_id(name), ratchet:ratchet_id(name), bit:bit_id(name), lock_chip:lock_chip_id(name)),
+      combo2:combo2_id(id, name, total_points, blade:blade_id(name), assist_blade:assist_blade_id(name), ratchet:ratchet_id(name), bit:bit_id(name), lock_chip:lock_chip_id(name)),
+      combo3:combo3_id(id, name, total_points, blade:blade_id(name), assist_blade:assist_blade_id(name), ratchet:ratchet_id(name), bit:bit_id(name), lock_chip:lock_chip_id(name))
     `)
         .eq('user_id', user.id)
         .order('tournament_date', { ascending: false })

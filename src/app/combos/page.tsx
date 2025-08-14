@@ -23,6 +23,7 @@ export default function Combos() {
         assist_blade_id: null,
         ratchet_id: null,
         bit_id: null,
+        lock_chip_id: null,
         notes: ''
     })
 
@@ -31,7 +32,8 @@ export default function Combos() {
         blade: '',
         assistBlade: '',
         ratchet: '',
-        bit: ''
+        bit: '',
+        lockChip: ''
     })
 
     // Edit form values for autocomplete (part names)
@@ -39,7 +41,8 @@ export default function Combos() {
         blade: '',
         assistBlade: '',
         ratchet: '',
-        bit: ''
+        bit: '',
+        lockChip: ''
     })
 
     useEffect(() => {
@@ -92,7 +95,8 @@ export default function Combos() {
                 blade_id: getPartIdByName(formValues.blade, 'blade'),
                 assist_blade_id: getPartIdByName(formValues.assistBlade, 'assist_blade'),
                 ratchet_id: getPartIdByName(formValues.ratchet, 'ratchet'),
-                bit_id: getPartIdByName(formValues.bit, 'bit')
+                bit_id: getPartIdByName(formValues.bit, 'bit'),
+                lock_chip_id: getPartIdByName(formValues.lockChip, 'lock_chip')
             }
 
             await addCombo(comboData)
@@ -102,13 +106,15 @@ export default function Combos() {
                 assist_blade_id: null,
                 ratchet_id: null,
                 bit_id: null,
+                lock_chip_id: null,
                 notes: ''
             })
             setFormValues({
                 blade: '',
                 assistBlade: '',
                 ratchet: '',
-                bit: ''
+                bit: '',
+                lockChip: ''
             })
             setShowAddForm(false)
             loadData() // Refresh data
@@ -129,6 +135,7 @@ export default function Combos() {
                 assist_blade_id: getPartIdByName(editFormValues.assistBlade, 'assist_blade'),
                 ratchet_id: getPartIdByName(editFormValues.ratchet, 'ratchet'),
                 bit_id: getPartIdByName(editFormValues.bit, 'bit'),
+                lock_chip_id: getPartIdByName(editFormValues.lockChip, 'lock_chip'),
                 notes: editingCombo.notes
             })
             setEditingCombo(null)
@@ -136,7 +143,8 @@ export default function Combos() {
                 blade: '',
                 assistBlade: '',
                 ratchet: '',
-                bit: ''
+                bit: '',
+                lockChip: ''
             })
             loadData() // Refresh data
         } catch (error) {
@@ -161,7 +169,8 @@ export default function Combos() {
             blade: combo.blade?.name || '',
             assistBlade: combo.assist_blade?.name || '',
             ratchet: combo.ratchet?.name || '',
-            bit: combo.bit?.name || ''
+            bit: combo.bit?.name || '',
+            lockChip: combo.lock_chip?.name || ''
         })
         setShowAddForm(false) // Close add form if open
     }
@@ -172,7 +181,8 @@ export default function Combos() {
             blade: '',
             assistBlade: '',
             ratchet: '',
-            bit: ''
+            bit: '',
+            lockChip: ''
         })
     }
 
@@ -350,6 +360,19 @@ export default function Combos() {
 
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    Lock Chip (Optional)
+                                                </label>
+                                                <AutocompleteInput
+                                                    type="lock_chip"
+                                                    value={formValues.lockChip}
+                                                    onChange={(value) => setFormValues({ ...formValues, lockChip: value })}
+                                                    placeholder={getPartsByType('lock_chip').length === 0 ? 'No lock chips available (optional)' : 'No lock chip'}
+                                                    existingParts={getPartsByType('lock_chip')}
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                                     Ratchet
                                                 </label>
                                                 <AutocompleteInput
@@ -502,6 +525,26 @@ export default function Combos() {
                                                         {getPartsByType('assist_blade').length === 0 ? 'No assist blades available (optional)' : 'No assist blade'}
                                                     </option>
                                                     {getPartsByType('assist_blade').map((part) => (
+                                                        <option key={part.id} value={part.id}>
+                                                            {part.name} {part.series && `(${part.series})`}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    Lock Chip (Optional)
+                                                </label>
+                                                <select
+                                                    value={editingCombo.lock_chip_id || ''}
+                                                    onChange={(e) => setEditingCombo({ ...editingCombo, lock_chip_id: e.target.value ? parseInt(e.target.value) : null })}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                                >
+                                                    <option value="">
+                                                        {getPartsByType('lock_chip').length === 0 ? 'No lock chips available (optional)' : 'No lock chip'}
+                                                    </option>
+                                                    {getPartsByType('lock_chip').map((part) => (
                                                         <option key={part.id} value={part.id}>
                                                             {part.name} {part.series && `(${part.series})`}
                                                         </option>
