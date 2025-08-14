@@ -11,7 +11,6 @@ interface EnhancedAutocompleteInputProps {
     onChange: (value: string, partInfo?: { series?: string; type?: PartType }) => void
     onProductSelect?: (product: MasterProduct) => void
     onRandomBoosterSelect?: (randomBooster: MasterProduct) => void // New prop for random boosters
-    type: PartType
     existingParts: BeybladePartDB[]
     placeholder?: string
     className?: string
@@ -30,9 +29,18 @@ interface Suggestion {
 
 // Helper function to get image for a part by name and type
 const getPartImage = (name: string, type: PartType): string | undefined => {
-    const masterPart = MASTER_PARTS.find(part =>
+    // First try to find exact match with name and type
+    let masterPart = MASTER_PARTS.find(part =>
         part.name.toLowerCase() === name.toLowerCase() && part.type === type
     )
+    
+    // If no exact match, try to find by name only (for cases where type might be slightly different)
+    if (!masterPart) {
+        masterPart = MASTER_PARTS.find(part =>
+            part.name.toLowerCase() === name.toLowerCase()
+        )
+    }
+    
     return masterPart?.image
 }
 
@@ -41,7 +49,6 @@ export default function EnhancedAutocompleteInput({
     onChange,
     onProductSelect,
     onRandomBoosterSelect,
-    type,
     existingParts,
     placeholder = 'Start typing to see suggestions...',
     className = '',
@@ -64,13 +71,12 @@ export default function EnhancedAutocompleteInput({
         const newSuggestions: Suggestion[] = []
 
         if (showProducts) {
-            // Get both parts and products
-            const { parts: masterParts, products } = searchPartsAndProducts(value, type)
+            // Get both parts and products (no type filtering - show all parts)
+            const { parts: masterParts, products } = searchPartsAndProducts(value)
 
-            // Add existing parts (highest priority)
+            // Add existing parts (highest priority) - show all types
             const existingMatches = existingParts
                 .filter(part =>
-                    part.type === type &&
                     part.name.toLowerCase().includes(value.toLowerCase())
                 )
                 .map(part => ({
@@ -83,18 +89,16 @@ export default function EnhancedAutocompleteInput({
 
             newSuggestions.push(...existingMatches)
 
-            // Add product suggestions (if looking for blades or no specific type)
-            if (!type || type === 'blade') {
-                const productSuggestions = products.map(product => ({
-                    name: `${product.name} (Complete Product)`,
-                    source: 'product' as const,
-                    series: product.series,
-                    image: product.image,
-                    type: 'blade' as PartType,
-                    product
-                }))
-                newSuggestions.push(...productSuggestions)
-            }
+            // Add product suggestions
+            const productSuggestions = products.map(product => ({
+                name: `${product.name} (Complete Product)`,
+                source: 'product' as const,
+                series: product.series,
+                image: product.image,
+                type: 'blade' as PartType,
+                product
+            }))
+            newSuggestions.push(...productSuggestions)
 
             // Add master parts suggestions
             const masterSuggestions = masterParts
@@ -113,10 +117,9 @@ export default function EnhancedAutocompleteInput({
 
             newSuggestions.push(...masterSuggestions)
         } else {
-            // Original logic for parts only
+            // Original logic for parts only - show all types
             const existingMatches = existingParts
                 .filter(part =>
-                    part.type === type &&
                     part.name.toLowerCase().includes(value.toLowerCase())
                 )
                 .map(part => ({
@@ -129,7 +132,6 @@ export default function EnhancedAutocompleteInput({
 
             const masterMatches = MASTER_PARTS
                 .filter(part =>
-                    part.type === type &&
                     part.name.toLowerCase().includes(value.toLowerCase()) &&
                     !existingMatches.some(existing =>
                         existing.name.toLowerCase() === part.name.toLowerCase()
@@ -148,7 +150,7 @@ export default function EnhancedAutocompleteInput({
 
         setSuggestions(newSuggestions.slice(0, 15)) // Limit to 15 suggestions
         setSelectedIndex(-1)
-    }, [value, type, existingParts, showProducts])
+    }, [value, existingParts, showProducts])
 
     const handleSelect = (suggestion: Suggestion) => {
         if (suggestion.source === 'product' && suggestion.product) {
@@ -274,6 +276,13 @@ export default function EnhancedAutocompleteInput({
                                             }
                                         </span>
 
+                                        {/* Part Type Badge (for individual parts) */}
+                                        {suggestion.source !== 'product' && suggestion.type && (
+                                            <span className="text-xs px-2 py-1 rounded-full flex-shrink-0 bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300">
+                                                {suggestion.type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                            </span>
+                                        )}
+
                                         {/* Source Badge */}
                                         <span className={`text-xs px-2 py-1 rounded-full flex-shrink-0 ${suggestion.source === 'existing'
                                             ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
@@ -285,7 +294,7 @@ export default function EnhancedAutocompleteInput({
                                                 ? 'Owned'
                                                 : suggestion.source === 'product'
                                                     ? 'Product'
-                                                    : suggestion.type ? suggestion.type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Database'
+                                                    : 'Database'
                                             }
                                         </span>
                                     </div>

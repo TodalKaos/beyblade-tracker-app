@@ -473,7 +473,7 @@ export default function Collection() {
                                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 mb-8">
                                     <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Add New Part</h3>
                                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                                        💡 <strong>Tip:</strong> Type a blade name (like &quot;Dran Buster&quot;) to see complete products that include all parts!
+                                        💡 <strong>Tip:</strong> Just start typing any part name! The part type will be detected automatically when you select it. You can also search for complete products.
                                     </p>
 
                                     {/* Existing Part Detection */}
@@ -520,32 +520,29 @@ export default function Collection() {
                                                         if (partInfo?.series && !newPart.series) {
                                                             updatedPart.series = partInfo.series
                                                         }
+                                                        // Auto-fill type if it's from master parts
+                                                        if (partInfo?.type) {
+                                                            updatedPart.type = partInfo.type
+                                                        }
                                                         setNewPart(updatedPart)
                                                     }}
                                                     onProductSelect={handleAddCompleteProduct}
                                                     onRandomBoosterSelect={handleRandomBoosterSelect}
-                                                    type={newPart.type}
                                                     existingParts={parts}
                                                     placeholder="Start typing part name or product..."
                                                     required
                                                     showProducts={true}
                                                 />
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                    Part Type
-                                                </label>
-                                                <select
-                                                    value={newPart.type}
-                                                    onChange={(e) => setNewPart({ ...newPart, type: e.target.value as PartType })}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                                >
-                                                    <option value="blade">Blade</option>
-                                                    <option value="assist_blade">Assist Blade</option>
-                                                    <option value="ratchet">Ratchet</option>
-                                                    <option value="bit">Bit</option>
-                                                    <option value="lock_chip">Lock Chip</option>
-                                                </select>
+                                                
+                                                {/* Part Type Indicator */}
+                                                {newPart.name && newPart.type && (
+                                                    <div className="mt-2 flex items-center gap-2">
+                                                        <span className="text-xs text-gray-500 dark:text-gray-400">Detected type:</span>
+                                                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                                            {newPart.type.charAt(0).toUpperCase() + newPart.type.slice(1).replace('_', ' ')}
+                                                        </span>
+                                                    </div>
+                                                )}
                                             </div>
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

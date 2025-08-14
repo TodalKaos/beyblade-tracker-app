@@ -1,4 +1,4 @@
-const CACHE_NAME = 'beyblade-tracker-v0.1.0-20250814T162203';
+const CACHE_NAME = 'beyblade-tracker-v0.1.0-20250814T163121';
 const STATIC_CACHE_URLS = [
     '/',
     '/collection',
