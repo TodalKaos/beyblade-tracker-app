@@ -351,7 +351,7 @@ export const MASTER_PARTS: MasterPart[] = [
     {
         name: 'Leon Claw (Yellow Ver.)',
         type: 'blade',
-        series: 'UX-12',
+        series: 'UX-12 04',
         color: 'Yellow',
         image: '/images/parts/blades/LeonClawYellow.png',
         stats: { attack: 40, defense: 40, stamina: 20, weight: 31.4, burstResistance: 0 }
@@ -836,7 +836,7 @@ export const MASTER_PARTS: MasterPart[] = [
     {
         name: 'Phoenix Feather (Black Ver.)',
         type: 'blade',
-        series: 'UX-12',
+        series: 'UX-12 05',
         color: 'Black',
         image: '/images/parts/blades/PhoenixFeatherBlack.png',
         stats: { attack: 50, defense: 20, stamina: 30, weight: 33.3, burstResistance: 0 }
@@ -2174,7 +2174,7 @@ export const MASTER_PARTS: MasterPart[] = [
     {
         name: 'Hells (Blue Ver.)',
         type: 'lock_chip',
-        series: 'CX-05 02',
+        series: 'CX-05 03',
         color: 'Blue',
         image: '/images/parts/lock_chips/HellsBlue.png',
         stats: { attack: 0, defense: 0, stamina: 0, weight: 1.7, burstResistance: 0 }
@@ -2182,7 +2182,7 @@ export const MASTER_PARTS: MasterPart[] = [
     {
         name: 'Hells (Yellow Ver.)',
         type: 'lock_chip',
-        series: 'CX-05 03',
+        series: 'UX-15',
         color: 'Yellow',
         image: '/images/parts/lock_chips/HellsYellow.png',
         stats: { attack: 0, defense: 0, stamina: 0, weight: 1.7, burstResistance: 0 }

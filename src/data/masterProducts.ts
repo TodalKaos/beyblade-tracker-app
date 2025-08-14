@@ -904,6 +904,339 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
 
 
     // Takara Tomy UX Series
+    {
+        id: 'TT - UX-01',
+        name: 'DranBuster 1-60A',
+        series: 'UX-01',
+        manufacturer: 'Takara Tomy',
+        parts: [
+            { name: 'DranBuster', type: 'blade' },
+            { name: '1-60A', type: 'ratchet' },
+            { name: 'Accel', type: 'bit' },
+        ],
+        image: '/images/products/DranBuster_1-60A.jpg',
+        type: 'standard',
+    },
+    {
+        id: 'TT - UX-02',
+        name: 'HellsHammer 3-70H',
+        series: 'UX-02',
+        manufacturer: 'Takara Tomy',
+        parts: [
+            { name: 'Hells Hammer', type: 'blade' },
+            { name: '3-70', type: 'ratchet' },
+            { name: 'Hexa', type: 'bit' },
+        ],
+        image: '/images/products/HellsHammer_3-70H.jpg',
+        type: 'standard',
+    },
+    {
+        id: 'TT - UX-03',
+        name: 'WizardRod 5-70DB',
+        series: 'UX-03',
+        manufacturer: 'Takara Tomy',
+        parts: [
+            { name: 'Wizard Rod', type: 'blade' },
+            { name: '5-70', type: 'ratchet' },
+            { name: 'Disk Ball', type: 'bit' },
+        ],
+        image: '/images/products/WizardRod_5-70DB.jpg',
+        type: 'standard',
+    },
+    {
+        id: 'TT - UX-04',
+        name: 'Battle Entry Set U',
+        series: 'UX-04',
+        manufacturer: 'Takara Tomy',
+        parts: [
+            { name: 'Dran Buster (Special Ver.)', type: 'blade' },
+            { name: '1-60', type: 'ratchet' },
+            { name: 'Accel', type: 'bit' },
+            { name: 'Wizard Rod (Special Ver.)', type: 'blade' },
+            { name: '5-70', type: 'ratchet' },
+            { name: 'Disk Ball', type: 'bit' },
+        ],
+        image: '/images/products/BattleEntrySet_U.jpg',
+        type: 'standard',
+    },
+    {
+        id: 'TT - UX-05',
+        name: 'Random Booster ShinobiShadow Select',
+        series: 'UX-05',
+        manufacturer: 'Takara Tomy',
+        parts: [],
+        possibleProducts: [], // Will be populated by initializeRandomBoosters()
+        probabilities: [], // Will be populated by initializeRandomBoosters()
+        image: '/images/products/RandomBoosterShinobiShadowSelect.jpg',
+        type: 'random_booster',
+    },
+    {
+        id: 'UX - 05 - 01',
+        name: 'ShinobiShadow 1-80MN',
+        series: 'UX - 05 01',
+        manufacturer: 'Takara Tomy',
+        parts: [
+            { name: 'Shinobi Shadow', type: 'blade' },
+            { name: '1-80', type: 'ratchet' },
+            { name: 'Metal Needle', type: 'bit' },
+        ],
+        image: '/images/products/ShinobiShadow_1-80MN.jpg',
+        type: 'standard',
+    },
+    {
+        id: 'UX - 05 - 02',
+        name: 'ShinobiShadow 9-60LF',
+        series: 'UX - 05 02',
+        manufacturer: 'Takara Tomy',
+        parts: [
+            { name: 'Shinobi Shadow (Black Ver.)', type: 'blade' },
+            { name: '9-60', type: 'ratchet' },
+            { name: 'Low Flat', type: 'bit' },
+        ],
+        image: '/images/products/ShinobiShadow_9-60LF.jpg',
+        type: 'standard',
+    },
+    {
+        id: 'UX - 05 - 03',
+        name: 'ShinobiShadow 3-70GP',
+        series: 'UX - 05 03',
+        manufacturer: 'Takara Tomy',
+        parts: [
+            { name: 'Shinobi Shadow (Yellow Ver.)', type: 'blade' },
+            { name: '3-70', type: 'ratchet' },
+            { name: 'Gear Point', type: 'bit' },
+        ],
+        image: '/images/products/ShinobiShadow_3-70GP.jpg',
+        type: 'standard',
+    },
+    {
+        id: 'TT - UX-06',
+        name: 'LeonCrest 7-60GN',
+        series: 'UX-06',
+        manufacturer: 'Takara Tomy',
+        parts: [
+            { name: 'Leon Crest', type: 'blade' },
+            { name: '7-60', type: 'ratchet' },
+            { name: 'Gear Needle', type: 'bit' },
+        ],
+        image: '/images/products/LeonCrest_7-60GN.jpg',
+        type: 'standard',
+    },
+    {
+        id: 'TT - UX-07',
+        name: 'PhoenixRudder Deck Set',
+        series: 'UX-07',
+        manufacturer: 'Takara Tomy',
+        parts: [
+            { name: 'Phoenix Rudder', type: 'blade' },
+            { name: '9-70', type: 'ratchet' },
+            { name: 'Glide', type: 'bit' },
+            { name: 'Sphinx Cowl (Blue Ver.)', type: 'blade' },
+            { name: '1-80', type: 'ratchet' },
+            { name: 'Gear Flat', type: 'bit' },
+            { name: 'Wyvern Gale (Black Ver.)', type: 'blade' },
+            { name: '2-60', type: 'ratchet' },
+            { name: 'Spike', type: 'bit' },
+        ],
+        image: '/images/products/PhoenixRudderDeckSet.jpg',
+        type: 'standard',
+    },
+    {
+        id: 'TT - UX-08',
+        name: 'SilverWolf 3-80FB',
+        series: 'UX-08',
+        manufacturer: 'Takara Tomy',
+        parts: [
+            { name: 'Silver Wolf', type: 'blade' },
+            { name: '3-80', type: 'ratchet' },
+            { name: 'Free Ball', type: 'bit' },
+        ],
+        image: '/images/products/SilverWolf_3-80FB.jpg',
+        type: 'standard',
+    },
+    {
+        id: 'TT - UX-09',
+        name: 'SamuraiSaber 2-70L',
+        series: 'UX-09',
+        manufacturer: 'Takara Tomy',
+        parts: [
+            { name: 'Samurai Saber', type: 'blade' },
+            { name: '2-70', type: 'ratchet' },
+            { name: 'Level', type: 'bit' },
+        ],
+        image: '/images/products/SamuraiSaber_2-70L.jpg',
+        type: 'standard',
+    },
+    {
+        id: 'TT - UX-10',
+        name: 'Customize Set U',
+        series: 'UX-10',
+        manufacturer: 'Takara Tomy',
+        parts: [
+            { name: 'Knight Mail', type: 'blade' },
+            { name: 'Ptera Swing (Yellow Ver.)', type: 'blade' },
+            { name: 'Hells Hammer (Metal Coat: Blue Ver.)', type: 'blade' },
+            { name: 'Tyranno Beat (Metal Coat: Red Ver.)', type: 'blade' },
+            { name: '1-60', type: 'ratchet' },
+            { name: '3-85', type: 'ratchet' },
+            { name: '7-70', type: 'ratchet' },
+            { name: 'Ball', type: 'bit' },
+            { name: 'Bound Spike', type: 'bit' },
+            { name: 'Metal Needle', type: 'bit' },
+            { name: 'Point', type: 'bit' },
+            { name: 'Rubber Accel', type: 'bit' },
+            { name: 'Rush', type: 'bit' },
+        ],
+        image: '/images/products/CustomizeSetU.jpg',
+        type: 'standard'
+    },
+    {
+        id: 'TT - UX-11',
+        name: 'ImpactDrake 9-60LR',
+        series: 'UX-11',
+        manufacturer: 'Takara Tomy',
+        parts: [
+            { name: 'Impact Drake', type: 'blade' },
+            { name: '9-60', type: 'ratchet' },
+            { name: 'Low Rush', type: 'bit' },
+        ],
+        image: '/images/products/ImpactDrake_9-60LR.jpg',
+        type: 'standard'
+    },
+    {
+        id: 'TT - UX-12',
+        name: 'Random Booster Vol. 5',
+        series: 'UX-12',
+        manufacturer: 'Takara Tomy',
+        parts: [],
+        possibleProducts: [], // Will be populated by initializeRandomBoosters()
+        probabilities: [], // Will be populated by initializeRandomBoosters()
+        image: '/images/products/RandomBoosterVol5.jpg',
+        type: 'random_booster'
+    },
+    {
+        id: 'UX - 12 - 01',
+        name: 'GhostCircle 0-80GB',
+        series: 'UX-12 01',
+        manufacturer: 'Takara Tomy',
+        parts: [
+            { name: 'Ghost Circle', type: 'blade' },
+            { name: '0-80', type: 'ratchet' },
+            { name: 'Gear Ball', type: 'bit' },
+        ],
+        image: '/images/products/GhostCircle_0-80GB.png',
+        type: 'standard'
+    },
+    {
+        id: 'UX - 12 - 02',
+        name: 'GhostCircle 4-60H',
+        series: 'UX-12 02',
+        manufacturer: 'Takara Tomy',
+        parts: [
+            { name: 'Ghost Circle (Green Ver.)', type: 'blade' },
+            { name: '4-60', type: 'ratchet' },
+            { name: 'Hexa', type: 'bit' },
+        ],
+        image: '/images/products/GhostCircle_4-60H.png',
+        type: 'standard'
+    },
+    {
+        id: 'UX - 12 - 03',
+        name: 'ShinobiShadow 3-80F',
+        series: 'UX-12 03',
+        manufacturer: 'Takara Tomy',
+        parts: [
+            { name: 'Shinobi Shadow (Blue Ver.)', type: 'blade' },
+            { name: '3-80', type: 'ratchet' },
+            { name: 'Flat', type: 'bit' },
+        ],
+        image: '/images/products/ShinobiShadow_3-80F.png',
+        type: 'standard'
+    },
+    {
+        id: 'UX - 12 - 04',
+        name: 'LeonClaw 0-80E',
+        series: 'UX-12 04',
+        manufacturer: 'Takara Tomy',
+        parts: [
+            { name: 'Leon Claw (Yellow Ver.)', type: 'blade' },
+            { name: '0-80', type: 'ratchet' },
+            { name: 'Elevate', type: 'bit' },
+        ],
+        image: '/images/products/LeonClaw_0-80E.png',
+        type: 'standard'
+    },
+    {
+        id: 'UX - 12 - 05',
+        name: 'PhoenixFeather 2-60N',
+        series: 'UX-12 05',
+        manufacturer: 'Takara Tomy',
+        parts: [
+            { name: 'Phoenix Feather (Black Ver.)', type: 'blade' },
+            { name: '2-60', type: 'ratchet' },
+            { name: 'Needle', type: 'bit' },
+        ],
+        image: '/images/products/PhoenixFeather_2-60N.png',
+        type: 'standard'
+    },
+    {
+        id: 'UX - 12 - 06',
+        name: 'WyvernGale 0-80C',
+        series: 'UX-12 06',
+        manufacturer: 'Takara Tomy',
+        parts: [
+            { name: 'Wyvern Gale (Red Ver.)', type: 'blade' },
+            { name: '0-80', type: 'ratchet' },
+            { name: 'Cyclone', type: 'bit' },
+        ],
+        image: '/images/products/WyvernGale_0-80C.png',
+        type: 'standard'
+    },
+    {
+        id: 'TT - UX-13',
+        name: 'GolemRock 1-60UN',
+        series: 'UX-13',
+        manufacturer: 'Takara Tomy',
+        parts: [
+            { name: 'Golem Rock', type: 'blade' },
+            { name: '1-60', type: 'ratchet' },
+            { name: 'Under Needle', type: 'bit' },
+        ],
+        image: '/images/products/GolemRock_1-60UN.jpg',
+        type: 'standard'
+    },
+    {
+        id: 'TT - UX-14',
+        name: 'ScorpioSpear 0-70Z',
+        series: 'UX-14',
+        manufacturer: 'Takara Tomy',
+        parts: [
+            { name: 'Scorpio Spear', type: 'blade' },
+            { name: '0-70', type: 'ratchet' },
+            { name: 'Zap', type: 'bit' },
+        ],
+        image: '/images/products/ScorpioSpear_0-70Z.jpg',
+        type: 'standard'
+    },
+    {
+        id: 'TT - UX-15',
+        name: 'SharkScale Deck Set',
+        series: 'UX-15',
+        manufacturer: 'Takara Tomy',
+        parts: [
+            { name: 'Shark Scale', type: 'blade' },
+            { name: '4-50', type: 'ratchet' },
+            { name: 'Under Flat', type: 'bit' },
+            { name: 'Roar Tyranno (Orange Ver.)', type: 'blade' },
+            { name: 'Hells (Yellow Ver.)', type: 'lock_chip' },
+            { name: 'Brave (Yellow Ver.)', type: 'blade' },
+            { name: 'Jaggy', type: 'assist_blade' },
+            { name: '3-60', type: 'ratchet' },
+            { name: 'Gear Flat', type: 'bit' },
+        ],
+        image: '/images/products/SharkScaleDeckSet.jpg',
+        type: 'standard'
+    },
 
 
     // Takara Tomy CX Series (with Assist Blades and Lock Chips)
@@ -1054,6 +1387,29 @@ export function initializeRandomBoosters() {
             getProductById('BX - 39 - 01'), // ShelterDrake 7-80GP
             getProductById('BX - 39 - 02'), // ShelterDrake 5-70O
             getProductById('BX - 39 - 03'), // ShelterDrake 3-60D
+        ].filter(Boolean) as MasterProduct[]
+    }
+
+    // Random Booster Shinobi Shadow Select
+    const randomBooster9 = MASTER_PRODUCTS.find(product => product.id === 'TT - UX-05')
+    if (randomBooster9 && randomBooster9.type === 'random_booster') {
+        randomBooster9.possibleProducts = [
+            getProductById('UX - 05 - 01'), // Shinobi Shadow
+            getProductById('UX - 05 - 02'), // Shinobi Shadow (Black Ver.)
+            getProductById('UX - 05 - 03'), // Shinobi Shadow (Yellow Ver.)
+        ].filter(Boolean) as MasterProduct[]
+    }
+
+    // Random Booster Vol. 5
+    const randomBooster10 = MASTER_PRODUCTS.find(product => product.id === 'TT - UX-12')
+    if (randomBooster10 && randomBooster10.type === 'random_booster') {
+        randomBooster10.possibleProducts = [
+            getProductById('UX - 12 - 01'), // Ghost Circle
+            getProductById('UX - 12 - 02'), // Ghost Circle (Green Ver.)
+            getProductById('UX - 12 - 03'), // Shinobi Shadow (Blue Ver.)
+            getProductById('UX - 12 - 04'), // Leon Claw (Yellow Ver.)
+            getProductById('UX - 12 - 05'), // Phoenix Feather (Black Ver.)
+            getProductById('UX - 12 - 06'), // Wyvern Gale (Red Ver.)
         ].filter(Boolean) as MasterProduct[]
     }
 }

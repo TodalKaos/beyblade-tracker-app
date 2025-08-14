@@ -33,14 +33,14 @@ const getPartImage = (name: string, type: PartType): string | undefined => {
     let masterPart = MASTER_PARTS.find(part =>
         part.name.toLowerCase() === name.toLowerCase() && part.type === type
     )
-    
+
     // If no exact match, try to find by name only (for cases where type might be slightly different)
     if (!masterPart) {
         masterPart = MASTER_PARTS.find(part =>
             part.name.toLowerCase() === name.toLowerCase()
         )
     }
-    
+
     return masterPart?.image
 }
 

@@ -533,7 +533,7 @@ export default function Collection() {
                                                     required
                                                     showProducts={true}
                                                 />
-                                                
+
                                                 {/* Part Type Indicator */}
                                                 {newPart.name && newPart.type && (
                                                     <div className="mt-2 flex items-center gap-2">
