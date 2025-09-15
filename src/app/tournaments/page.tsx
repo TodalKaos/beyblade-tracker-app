@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import Navigation from '@/components/Navigation'
 import Footer from '@/components/Footer'
 import ProtectedRoute from '@/components/ProtectedRoute'
-import { getAllTournaments, getTournamentStats, addTournament, updateTournament, deleteTournament, getAllCombos, getComboTestStats, addTournamentRound, getTournamentRounds, deleteTournamentRound } from '@/services/database'
+import { getAllTournaments, getTournamentStats, addTournament, updateTournament, deleteTournament, getAllCombos, getComboTestStats, addTournamentRound, getTournamentRounds, deleteTournamentRound, clearAllTournamentRounds } from '@/services/database'
 import type { TournamentWithCombos, TournamentCreate, ComboWithParts, DeckRecommendation, FinishType } from '@/types/beyblade'
 
 export default function EnhancedTournaments() {
@@ -649,7 +649,7 @@ function TournamentsTab({
                         <div className="grid md:grid-cols-3 gap-4">
                             {[1, 2, 3].map((comboNum) => (
                                 <div key={comboNum} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
-                                    <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Combo {comboNum}</h4>
+                                    <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Bey {comboNum}</h4>
                                     <div className="space-y-2">
                                         <select
                                             value={newTournament[`combo${comboNum}_id` as keyof TournamentCreate] as number || ''}
@@ -777,7 +777,7 @@ function TournamentsTab({
                         <div className="grid md:grid-cols-3 gap-4">
                             {[1, 2, 3].map((comboNum) => (
                                 <div key={comboNum} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
-                                    <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Combo {comboNum}</h4>
+                                    <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Bey {comboNum}</h4>
                                     <div className="space-y-2">
                                         <select
                                             value={newTournament[`combo${comboNum}_id` as keyof TournamentCreate] as number || ''}
@@ -1117,7 +1117,7 @@ function RoundTracker({
 }) {
     const [rounds, setRounds] = useState<Array<{
         id: string
-        combo_number: number
+        combo_id: number
         finish_type: FinishType
         points: number
         created_at: string
@@ -1131,6 +1131,14 @@ function RoundTracker({
         tournament.combo2,
         tournament.combo3
     ].filter(combo => combo !== null)
+
+    // Helper function to get combo position from combo ID
+    const getComboPosition = (comboId: number) => {
+        if (tournament.combo1?.id === comboId) return 1
+        if (tournament.combo2?.id === comboId) return 2
+        if (tournament.combo3?.id === comboId) return 3
+        return comboId // fallback to original ID if not found
+    }
 
     // Load existing rounds when component mounts
     useEffect(() => {
@@ -1151,13 +1159,25 @@ function RoundTracker({
         if (updating) return
 
         setUpdating(true)
+        // Optimistically add the round to the UI
+        const optimisticRound = {
+            id: `optimistic-${Date.now()}`,
+            combo_id: comboNumber,
+            finish_type: finishType,
+            points: getFinishTypePoints(finishType),
+            created_at: new Date().toISOString(),
+        }
+        setRounds(prev => [optimisticRound, ...prev])
         try {
             await addTournamentRound(tournament.id.toString(), comboNumber, finishType)
             // Reload rounds to get the updated list
             const updatedRounds = await getTournamentRounds(tournament.id.toString())
             setRounds(updatedRounds)
         } catch (error) {
+            // Roll back optimistic update
+            setRounds(prev => prev.filter(r => r.id !== optimisticRound.id))
             console.error('Error adding tournament round:', error)
+            window.alert('Failed to add round. Please try again.')
         } finally {
             setUpdating(false)
         }
@@ -1179,18 +1199,40 @@ function RoundTracker({
         }
     }
 
+    const handleClearAllRounds = async () => {
+        if (updating || rounds.length === 0) return
+        
+        // Confirm with user before clearing all rounds
+        if (!window.confirm(`Are you sure you want to clear all ${rounds.length} rounds? This action cannot be undone.`)) {
+            return
+        }
+
+        setUpdating(true)
+        try {
+            // Use a more efficient approach: delete all rounds at once and reset combo points
+            await clearAllTournamentRounds(tournament.id.toString())
+            // Reload rounds to get the updated (empty) list
+            const updatedRounds = await getTournamentRounds(tournament.id.toString())
+            setRounds(updatedRounds)
+        } catch (error) {
+            console.error('Error clearing all tournament rounds:', error)
+        } finally {
+            setUpdating(false)
+        }
+    }
+
     const getTotalPoints = () => {
         return rounds.reduce((total, round) => total + round.points, 0)
     }
 
     const getComboTotalPoints = (comboNumber: number) => {
         return rounds
-            .filter(round => round.combo_number === comboNumber)
+            .filter(round => round.combo_id === comboNumber)
             .reduce((total, round) => total + round.points, 0)
     }
 
     const getComboRounds = (comboNumber: number) => {
-        return rounds.filter(round => round.combo_number === comboNumber)
+        return rounds.filter(round => round.combo_id === comboNumber)
     }
 
     const getFinishTypeColor = (finishType: FinishType) => {
@@ -1276,20 +1318,21 @@ function RoundTracker({
                     <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                         {tournamentCombos.map((combo, index) => {
                             const comboNumber = index + 1
-                            const comboRounds = getComboRounds(comboNumber)
+                            const comboId = combo?.id || 0  // Use actual combo ID
+                            const comboRounds = getComboRounds(comboId)
 
                             return (
                                 <div key={index} className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
                                     <div className="text-center mb-4">
                                         <h4 className="font-bold text-lg text-gray-900 dark:text-white mb-1">
-                                            Combo {comboNumber}
+                                            Bey {comboNumber}
                                         </h4>
                                         <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                                             {formatComboName(combo)}
                                         </p>
                                         <div className="bg-white dark:bg-gray-600 rounded-lg p-2">
                                             <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                                                {getComboTotalPoints(comboNumber)} pts
+                                                {getComboTotalPoints(comboId)} pts
                                             </p>
                                             <p className="text-xs text-gray-500 dark:text-gray-400">
                                                 {comboRounds.length} rounds
@@ -1302,7 +1345,7 @@ function RoundTracker({
                                         {(['spin', 'over', 'burst', 'xtreme'] as FinishType[]).map((finishType) => (
                                             <button
                                                 key={finishType}
-                                                onClick={() => handleAddPoints(comboNumber, finishType)}
+                                                onClick={() => handleAddPoints(comboId, finishType)}
                                                 disabled={updating}
                                                 className={`${getFinishTypeColor(finishType)} text-white font-semibold py-2 px-3 rounded-lg transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed`}
                                             >
@@ -1348,9 +1391,22 @@ function RoundTracker({
                     {rounds.length > 0 && (
                         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600">
                             <div className="p-4 border-b border-gray-200 dark:border-gray-600">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                                    Complete Round History ({rounds.length} rounds)
-                                </h3>
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                                        Complete Round History ({rounds.length} rounds)
+                                        {updating && (
+                                            <span className="ml-2 animate-spin inline-block w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full align-middle" title="Saving..." />
+                                        )}
+                                    </h3>
+                                    <button
+                                        onClick={handleClearAllRounds}
+                                        disabled={updating}
+                                        className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        title="Clear all rounds"
+                                    >
+                                        Clear All
+                                    </button>
+                                </div>
                             </div>
                             <div className="p-4 max-h-64 overflow-y-auto">
                                 <div className="space-y-2">
@@ -1361,7 +1417,7 @@ function RoundTracker({
                                                     #{rounds.length - index}
                                                 </span>
                                                 <span className="font-semibold text-gray-900 dark:text-white">
-                                                    Combo {round.combo_number}
+                                                    Bey {getComboPosition(round.combo_id)}
                                                 </span>
                                                 <span className={`px-2 py-1 rounded text-xs font-medium text-white ${getFinishTypeColor(round.finish_type).split(' ')[0]}`}>
                                                     {round.finish_type.charAt(0).toUpperCase() + round.finish_type.slice(1)}
@@ -1390,16 +1446,7 @@ function RoundTracker({
                         </div>
                     )}
 
-                    {updating && (
-                        <div className="fixed inset-0 bg-black bg-opacity-25 flex items-center justify-center z-10">
-                            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-lg">
-                                <div className="flex items-center gap-3">
-                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-green-600"></div>
-                                    <span className="text-gray-700 dark:text-gray-300">Updating...</span>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                    {/* Only show spinner in round history header, not global overlay, during round add/delete/clear */}
                 </div>
             </div>
         </div>

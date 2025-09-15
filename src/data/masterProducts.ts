@@ -1240,6 +1240,167 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
 
 
     // Takara Tomy CX Series (with Assist Blades and Lock Chips)
+    {
+        id: 'TT - CX-01',
+        name: 'DranBrave S6-60V',
+        series: 'CX-01',
+        manufacturer: 'Takara Tomy',
+        parts: [
+            { name: 'Dran', type: 'lock_chip' },
+            { name: 'Brave', type: 'blade' },
+            { name: 'Slash', type: 'assist_blade' },
+            { name: '6-60', type: 'ratchet' },
+            { name: 'Vortex', type: 'bit' },
+        ],
+        image: '/images/products/DranBrave_S6-60V.jpg',
+        type: 'standard'
+    },
+    {
+        id: 'TT - CX-02',
+        name: 'WizardArc R4-55LO',
+        series: 'CX-02',
+        manufacturer: 'Takara Tomy',
+        parts: [
+            { name: 'Wizard', type: 'lock_chip' },
+            { name: 'Arc', type: 'blade' },
+            { name: 'Round', type: 'assist_blade' },
+            { name: '4-55', type: 'ratchet' },
+            { name: 'Low Orb', type: 'bit' },
+        ],
+        image: '/images/products/WizardArc_R4-55LO.jpg',
+        type: 'standard'
+    },
+    {
+        id: 'TT - CX-03',
+        name: 'PerseusDark B6-80W',
+        series: 'CX-03',
+        manufacturer: 'Takara Tomy',
+        parts: [
+            { name: 'Perseus', type: 'lock_chip' },
+            { name: 'Dark', type: 'blade' },
+            { name: 'Bumper', type: 'assist_blade' },
+            { name: '6-80', type: 'ratchet' },
+            { name: 'Wedge', type: 'bit' },
+        ],
+        image: '/images/products/PerseusDark_B6-80W.jpg',
+        type: 'standard'
+    },
+    {
+        id: 'TT - CX-04',
+        name: 'Battle Entry Set C',
+        series: 'CX-04',
+        manufacturer: 'Takara Tomy',
+        parts: [
+            { name: 'Dran (Special Ver.)', type: 'lock_chip' },
+            { name: 'Brave (Special Ver.)', type: 'blade' },
+            { name: 'Slash', type: 'assist_blade' },
+            { name: '6-60', type: 'ratchet' },
+            { name: 'Vortex', type: 'bit' },
+            { name: 'Perseus (Special Ver.)', type: 'lock_chip' },
+            { name: 'Dark (Special Ver.)', type: 'blade' },
+            { name: 'Bumper', type: 'assist_blade' },
+            { name: '6-80', type: 'ratchet' },
+            { name: 'Wedge', type: 'bit' },
+        ],
+        image: '/images/products/BattleEntrySetC.jpg',
+        type: 'standard'
+    },
+    {
+        id: 'TT - CX-05',
+        name: 'Random Booster Vol. 6',
+        series: 'CX-05',
+        manufacturer: 'Takara Tomy',
+        parts: [],
+        possibleProducts: [], // Will be populated by initializeRandomBoosters()
+        probabilities: [], // Will be populated by initializeRandomBoosters()
+        image: '/images/products/RandomBoosterVol6.jpg',
+        type: 'random_booster'
+    },
+    {
+        id: 'CX - 05 - 01',
+        name: 'HellsReaper T4-70K',
+        series: 'CX-05 01',
+        manufacturer: 'Takara Tomy',
+        parts: [
+            { name: 'Hells', type: 'lock_chip' },
+            { name: 'Reaper', type: 'blade' },
+            { name: 'Turn', type: 'assist_blade' },
+            { name: '4-70', type: 'blade' },
+            { name: 'Kick', type: 'bit' },
+        ],
+        image: '/images/products/HellsReaper_T4-70K.png',
+        type: 'standard'
+    },
+    {
+        id: 'CX - 05 - 02',
+        name: 'RhinoReaper C4-55D',
+        series: 'CX-05 02',
+        manufacturer: 'Takara Tomy',
+        parts: [
+            { name: 'Rhino', type: 'lock_chip' },
+            { name: 'Reaper (Blue Ver.)', type: 'blade' },
+            { name: 'Charge', type: 'assist_blade' },
+            { name: '4-55', type: 'blade' },
+            { name: 'Dot', type: 'bit' },
+        ],
+        image: '/images/products/RhinoReaper_C4-55D.png',
+        type: 'standard'
+    },
+    {
+        id: 'CX - 05 - 03',
+        name: 'HellsArc T3-80O',
+        series: 'CX-05 03',
+        manufacturer: 'Takara Tomy',
+        parts: [
+            { name: 'Hells (Blue Ver.)', type: 'lock_chip' },
+            { name: 'Arc (Blue Ver.)', type: 'blade' },
+            { name: 'Turn', type: 'assist_blade' },
+            { name: '3-80', type: 'blade' },
+            { name: 'Orb', type: 'bit' },
+        ],
+        image: '/images/products/HellsArc_T3-80O.png',
+        type: 'standard'
+    },
+    {
+        id: 'CX - 05 - 04',
+        name: 'LeonCrest 9-80K',
+        series: 'CX-05 04',
+        manufacturer: 'Takara Tomy',
+        parts: [
+            { name: 'Leon Crest', type: 'blade' },
+            { name: '9-80', type: 'blade' },
+            { name: 'Kick', type: 'bit' },
+        ],
+        image: '/images/products/LeonCrest_9-80K.png',
+        type: 'standard'
+    },
+    {
+        id: 'CX - 05 - 05',
+        name: 'PhoenixRudder 4-70LF',
+        series: 'CX-05 05',
+        manufacturer: 'Takara Tomy',
+        parts: [
+            { name: 'Phoenix Rudder (Black Ver.)', type: 'blade' },
+            { name: '4-70', type: 'blade' },
+            { name: 'Low Flat', type: 'bit' },
+        ],
+        image: '/images/products/PhoenixRudder_4-70LF.png',
+        type: 'standard'
+    },
+    {
+        id: 'CX - 05 - 06',
+        name: 'WhaleWave 7-60K',
+        series: 'CX-05 06',
+        manufacturer: 'Takara Tomy',
+        parts: [
+            { name: 'Whale Wave (Yellow Ver.)', type: 'blade' },
+            { name: '7-60', type: 'blade' },
+            { name: 'Kick', type: 'bit' },
+        ],
+        image: '/images/products/WhaleWave_7-60K.png',
+        type: 'standard'
+    },
+
 
 
     // Hasbro Products

@@ -637,6 +637,8 @@ export async function deleteTestBattle(id: number): Promise<void> {
 
 // Tournament Round Functions
 export const addTournamentRound = async (tournamentId: string, comboNumber: number, finishType: FinishType) => {
+    console.log('addTournamentRound called with:', { tournamentId, comboNumber, finishType })
+    
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) throw new Error('User not authenticated')
 
@@ -649,27 +651,32 @@ export const addTournamentRound = async (tournamentId: string, comboNumber: numb
     }
 
     const points = pointValues[finishType]
+    console.log('Calculated points:', points)
 
     // Add the round to tournament_rounds table
+    const roundData = {
+        tournament_id: parseInt(tournamentId),
+        combo_id: comboNumber, // Use combo_id instead of combo_number
+        finish_type: finishType,
+        points: points,
+        user_id: user.id
+    }
+    console.log('Inserting round data:', roundData)
+
     const { error: roundError } = await supabase
         .from('tournament_rounds')
-        .insert({
-            tournament_id: tournamentId,
-            combo_number: comboNumber,
-            finish_type: finishType,
-            points: points,
-            user_id: user.id
-        })
+        .insert(roundData)
 
     if (roundError) {
-        console.error('Error adding tournament round:', roundError)
+        console.error('Error adding tournament round - detailed:', roundError)
+        console.error('Round error details:', JSON.stringify(roundError, null, 2))
         throw roundError
     }
 
     // Update the tournament combo points
     const { data: tournament, error: fetchError } = await supabase
         .from('tournaments')
-        .select('combo1_points, combo2_points, combo3_points')
+        .select('combo1_points, combo2_points, combo3_points, combo1_id, combo2_id, combo3_id')
         .eq('id', parseInt(tournamentId))
         .eq('user_id', user.id)
         .single()
@@ -679,8 +686,21 @@ export const addTournamentRound = async (tournamentId: string, comboNumber: numb
         throw fetchError
     }
 
+    // Determine which combo position this ID corresponds to
+    let comboPosition: number
+    if (tournament.combo1_id === comboNumber) {
+        comboPosition = 1
+    } else if (tournament.combo2_id === comboNumber) {
+        comboPosition = 2
+    } else if (tournament.combo3_id === comboNumber) {
+        comboPosition = 3
+    } else {
+        console.error('Combo ID not found in tournament:', { comboNumber, tournament })
+        throw new Error(`Combo ID ${comboNumber} not found in tournament`)
+    }
+
     // Update the appropriate combo points
-    const pointField = `combo${comboNumber}_points` as keyof typeof tournament
+    const pointField = `combo${comboPosition}_points` as keyof typeof tournament
     const currentPoints = tournament[pointField] || 0
     const newPoints = currentPoints + points
 
@@ -693,6 +713,35 @@ export const addTournamentRound = async (tournamentId: string, comboNumber: numb
     if (updateError) {
         console.error('Error updating tournament combo points:', updateError)
         throw updateError
+    }
+
+    // Recalculate and update total_points
+    const updatedPoints = {
+        combo1_points: tournament.combo1_points || 0,
+        combo2_points: tournament.combo2_points || 0,
+        combo3_points: tournament.combo3_points || 0
+    }
+    
+    // Update the specific combo points
+    if (comboPosition === 1) {
+        updatedPoints.combo1_points = newPoints
+    } else if (comboPosition === 2) {
+        updatedPoints.combo2_points = newPoints
+    } else if (comboPosition === 3) {
+        updatedPoints.combo3_points = newPoints
+    }
+    
+    const newTotalPoints = updatedPoints.combo1_points + updatedPoints.combo2_points + updatedPoints.combo3_points
+
+    const { error: totalUpdateError } = await supabase
+        .from('tournaments')
+        .update({ total_points: newTotalPoints })
+        .eq('id', parseInt(tournamentId))
+        .eq('user_id', user.id)
+
+    if (totalUpdateError) {
+        console.error('Error updating tournament total points:', totalUpdateError)
+        throw totalUpdateError
     }
 
     // Update combo stats to reflect the new points
@@ -725,7 +774,7 @@ export const deleteTournamentRound = async (roundId: string, tournamentId: strin
     // First get the round data to know how many points to subtract
     const { data: round, error: fetchError } = await supabase
         .from('tournament_rounds')
-        .select('combo_number, points')
+        .select('combo_id, points')
         .eq('id', roundId)
         .eq('user_id', user.id)
         .single()
@@ -750,7 +799,7 @@ export const deleteTournamentRound = async (roundId: string, tournamentId: strin
     // Update the tournament combo points by subtracting the deleted points
     const { data: tournament, error: fetchTournamentError } = await supabase
         .from('tournaments')
-        .select('combo1_points, combo2_points, combo3_points')
+        .select('combo1_points, combo2_points, combo3_points, combo1_id, combo2_id, combo3_id')
         .eq('id', parseInt(tournamentId))
         .eq('user_id', user.id)
         .single()
@@ -760,8 +809,21 @@ export const deleteTournamentRound = async (roundId: string, tournamentId: strin
         throw fetchTournamentError
     }
 
+    // Determine which combo position this ID corresponds to
+    let comboPosition: number
+    if (tournament.combo1_id === round.combo_id) {
+        comboPosition = 1
+    } else if (tournament.combo2_id === round.combo_id) {
+        comboPosition = 2
+    } else if (tournament.combo3_id === round.combo_id) {
+        comboPosition = 3
+    } else {
+        console.error('Combo ID not found in tournament for deletion:', { comboId: round.combo_id, tournament })
+        throw new Error(`Combo ID ${round.combo_id} not found in tournament`)
+    }
+
     // Update the appropriate combo points
-    const pointField = `combo${round.combo_number}_points` as keyof typeof tournament
+    const pointField = `combo${comboPosition}_points` as keyof typeof tournament
     const currentPoints = tournament[pointField] || 0
     const newPoints = Math.max(0, currentPoints - round.points) // Ensure points don't go negative
 
@@ -776,6 +838,75 @@ export const deleteTournamentRound = async (roundId: string, tournamentId: strin
         throw updateError
     }
 
+    // Recalculate and update total_points
+    const updatedPoints = {
+        combo1_points: tournament.combo1_points || 0,
+        combo2_points: tournament.combo2_points || 0,
+        combo3_points: tournament.combo3_points || 0
+    }
+    
+    // Update the specific combo points
+    if (comboPosition === 1) {
+        updatedPoints.combo1_points = newPoints
+    } else if (comboPosition === 2) {
+        updatedPoints.combo2_points = newPoints
+    } else if (comboPosition === 3) {
+        updatedPoints.combo3_points = newPoints
+    }
+    
+    const newTotalPoints = updatedPoints.combo1_points + updatedPoints.combo2_points + updatedPoints.combo3_points
+
+    const { error: totalUpdateError } = await supabase
+        .from('tournaments')
+        .update({ total_points: newTotalPoints })
+        .eq('id', parseInt(tournamentId))
+        .eq('user_id', user.id)
+
+    if (totalUpdateError) {
+        console.error('Error updating tournament total points after deletion:', totalUpdateError)
+        throw totalUpdateError
+    }
+
+    // Update combo stats to reflect the change
+    await updateComboStats()
+
     // Update combo stats to reflect the removed points
+    await updateComboStats()
+}
+
+export const clearAllTournamentRounds = async (tournamentId: string) => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('User not authenticated')
+
+    // Delete all rounds for this tournament
+    const { error: deleteError } = await supabase
+        .from('tournament_rounds')
+        .delete()
+        .eq('tournament_id', parseInt(tournamentId))
+        .eq('user_id', user.id)
+
+    if (deleteError) {
+        console.error('Error clearing all tournament rounds:', deleteError)
+        throw deleteError
+    }
+
+    // Reset all combo points to 0 for this tournament
+    const { error: updateError } = await supabase
+        .from('tournaments')
+        .update({ 
+            combo1_points: 0,
+            combo2_points: 0,
+            combo3_points: 0,
+            total_points: 0
+        })
+        .eq('id', parseInt(tournamentId))
+        .eq('user_id', user.id)
+
+    if (updateError) {
+        console.error('Error resetting tournament points:', updateError)
+        throw updateError
+    }
+
+    // Update combo stats to reflect the changes
     await updateComboStats()
 }

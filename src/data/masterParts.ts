@@ -684,7 +684,7 @@ export const MASTER_PARTS: MasterPart[] = [
     {
         name: 'Whale Wave (Yellow Ver.)',
         type: 'blade',
-        series: 'CX-05',
+        series: 'CX-05 06',
         color: 'Yellow',
         image: '/images/parts/blades/WhaleWaveYellow.png',
         stats: { attack: 45, defense: 35, stamina: 20, weight: 38.2, burstResistance: 0 }
@@ -1093,7 +1093,7 @@ export const MASTER_PARTS: MasterPart[] = [
     {
         name: 'Phoenix Rudder (Black Ver.)',
         type: 'blade',
-        series: 'CX-05',
+        series: 'CX-05 05',
         color: 'Black',
         image: '/images/parts/blades/PhoenixRudderBlack.png',
         stats: { attack: 10, defense: 35, stamina: 55, weight: 34.5, burstResistance: 0 }
@@ -1278,13 +1278,13 @@ export const MASTER_PARTS: MasterPart[] = [
     {
         name: 'Reaper',
         type: 'blade',
-        series: 'CX-05',
+        series: 'CX-05 01',
         color: 'Red',
         image: '/images/parts/blades/Reaper.png',
         stats: { attack: 40, defense: 20, stamina: 40, weight: 29.0, burstResistance: 0 }
     },
     {
-        name: 'Reaper',
+        name: 'Reaper (Blue Ver.)',
         type: 'blade',
         series: 'CX-05 02',
         color: 'Blue',
@@ -2134,7 +2134,7 @@ export const MASTER_PARTS: MasterPart[] = [
     {
         name: 'Perseus (Special Ver.)',
         type: 'lock_chip',
-        series: 'CX-05',
+        series: 'CX-04',
         color: 'Blue',
         image: '/images/parts/lock_chips/PerseusSpecial.png',
         stats: { attack: 0, defense: 0, stamina: 0, weight: 1.7, burstResistance: 0 }
